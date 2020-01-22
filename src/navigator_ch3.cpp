@@ -25,12 +25,15 @@ void navigator_ch3::receive_msg_data(DataMessage* t_msg)
             t_wp_pose.yaw=pathToFire[i].yaw;
             t_wpts.p.poses.push_back(t_wp_pose);
         }
-        emit_message(t_wpts);
+        emit_message(&t_wpts);
     }
     else if (t_msg->getType()==msg_type::EMPTY){ //TODO: Refactor to reflect scan path request
 
         std::vector<Waypoint> scanning_path=this->generateWaypointsToCorridor(launch_point,scanning_corridors[0].altitude);
-        scanning_path.push_back(this->generateWaypointsForScanning(scanning_path.end()->position));
+        std::vector<Waypoint> t_scanning_path_on_corridor=this->generateWaypointsForScanning(scanning_path.end()->position);
+        for (int i=0;i<t_scanning_path_on_corridor.size();i++){
+            scanning_path.push_back(t_scanning_path_on_corridor[i]);
+        }
         PosesMsg t_wpts;
         for (int i=0;i<scanning_path.size();i++){
             Pose t_wp_pose;
@@ -40,14 +43,26 @@ void navigator_ch3::receive_msg_data(DataMessage* t_msg)
             t_wp_pose.yaw=scanning_path[i].yaw;
             t_wpts.p.poses.push_back(t_wp_pose);
         }
-        emit_message(t_wpts);
+        emit_message(&t_wpts);
     }
-    if(t_msg->getType() == msg_type::POSE)
+    else if(t_msg->getType() == msg_type::POSE)
     {
         latest_known_position.x = ((PoseMsg*)t_msg)->pose.x;
         latest_known_position.y = ((PoseMsg*)t_msg)->pose.y;
         latest_known_position.z = ((PoseMsg*)t_msg)->pose.z;
+        //Find tip distance to wall
+        Vector3D<double> nozzle_base_vector,nozzle_loc;
+        nozzle_base_vector.x=nozzle_offset_to_center;
+        // TODO Compensate for heading
+        //RotationMatrix3by3 rot_matrix;
+        //rot_matrix.Update(UAV_attitude_latest);
+        //nozzle_loc=rot_matrix.TransformVector(nozzle_base_vector);
+        nozzle_loc=nozzle_loc+latest_known_position;
+        FloatMsg distance_to_wall_msg;
+        distance_to_wall_msg.data=(float)this->getDistanceToBuilding(nozzle_loc);
+        emit_message(&distance_to_wall_msg);
     }
+
 }
 
 navigator_ch3::navigator_ch3(Rectangle t_GF, Rectangle t_SndF, double altitude_increment, double min_dist_to_floor,
@@ -139,6 +154,10 @@ void navigator_ch3::updateLaunchPoint(Vector3D<double> t_launch_point)
     launch_point = t_launch_point;
 }
 
+void navigator_ch3::updateLandingPoint(Vector3D<double> t_landing_point){
+    landing_point= t_landing_point;
+}
+
 fire_id navigator_ch3::findFireID(Vector3D<double> fire_location)
 {
     if (fire_location.z<GF_height){
@@ -167,11 +186,14 @@ std::vector<Waypoint> navigator_ch3::generateWaypointsToCorridor(Vector3D<double
     Waypoint t_altitude_adj;
     t_altitude_adj.position = start_point;
     t_altitude_adj.position.z = corridor_altitude;
+    Vector2D<double> t_3d_to_2d;
+    t_3d_to_2d.x=t_altitude_adj.position.x;
+    t_3d_to_2d.y=t_altitude_adj.position.y;
     if (corridor_altitude>this->GF_FF_height){
-        t_altitude_adj.yaw=getHeadingToPoint(t_altitude_adj.position,SndF_center);
+        t_altitude_adj.yaw=getHeadingToPoint(t_3d_to_2d,SndF_center);
     }
     else{
-        t_altitude_adj.yaw=getHeadingToPoint(t_altitude_adj.position,GF_center);
+        t_altitude_adj.yaw=getHeadingToPoint(t_3d_to_2d,GF_center);
     }
     
     t_generated_waypoints.push_back(t_altitude_adj);
@@ -186,11 +208,11 @@ std::vector<Waypoint> navigator_ch3::generateWaypointsToCorridor(Vector3D<double
     closest_point_on_corridor.position.x = closest_point_on_corridor_2d.x;
     closest_point_on_corridor.position.y = closest_point_on_corridor_2d.y;
     closest_point_on_corridor.position.z = corridor_altitude;
-        if (corridor_altitude>this->GF_FF_height){
-        closest_point_on_corridor.yaw=getHeadingToPoint(t_altitude_adj.position,SndF_center);
+    if (corridor_altitude>this->GF_FF_height){
+        closest_point_on_corridor.yaw=getHeadingToPoint(closest_point_on_corridor_2d,SndF_center);
     }
     else{
-        closest_point_on_corridor.yaw=getHeadingToPoint(t_altitude_adj.position,GF_center);
+        closest_point_on_corridor.yaw=getHeadingToPoint(closest_point_on_corridor_2d,GF_center);
     }
     t_generated_waypoints.push_back(closest_point_on_corridor);
     return t_generated_waypoints;
@@ -276,10 +298,10 @@ double navigator_ch3::getDistanceToBuilding(Vector3D<double> t_point){
     t_point_2d.x=t_point.x;
     t_point_2d.y=t_point.y;
     if (t_point.z>GF_FF_height){
-        return SndF_outline.getClosestPoint(t_point_2d);
+        return Vector2D<double>::getL2Norm(SndF_outline.getClosestPoint(t_point_2d)-t_point_2d);
     }
     else{
-        return GF_outline.getClosestPoint(t_point_2d);
+        return Vector2D<double>::getL2Norm(GF_outline.getClosestPoint(t_point_2d)-t_point_2d);
     }
     return -1;
 }

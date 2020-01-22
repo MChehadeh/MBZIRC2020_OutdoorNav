@@ -91,8 +91,7 @@ int main(int argc, char **argv)
   Global2Inertial Global2Inertial_transformer;
 
   // Fire Location Estimators
-  ROSUnit* estimatedFireDirection = ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server_Publisher,ROSUnit_msg_type::ROSUnit_Vector,"/set_fire_direction")
-  new ROSUnit_set_fire_direction("/set_fire_direction", nh);
+  ROSUnit* estimatedFireDirection = ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server,ROSUnit_msg_type::ROSUnit_Vector,"/set_fire_direction");
   CollisionFilter fireLocationFilter;
 
   // Position and Orientation Sources
@@ -108,7 +107,7 @@ int main(int argc, char **argv)
   #elif defined(planA_GPS)
   ROSUnit_Xsens* position_receiver=new ROSUnit_Xsens(nh);
   #endif
-  ROSUnit* ROSUnit_inertial_frame_pos=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Publisher,ROSUnit_msg_type::ROSUnit_Point,"/inertial_position")
+  ROSUnit* ROSUnit_inertial_frame_pos=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Publisher,ROSUnit_msg_type::ROSUnit_Point,"/inertial_position");
   position_receiver->add_callback_msg_receiver(&Global2Inertial_transformer);//OK
   Global2Inertial_transformer.add_callback_msg_receiver(ROSUnit_inertial_frame_pos);//OK
   Global2Inertial_transformer.add_callback_msg_receiver(&navigator_ch3_main);//OK
@@ -121,9 +120,11 @@ int main(int argc, char **argv)
   ROSUnit* ROSUnit_upload_uav_fire_paths=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server,ROSUnit_msg_type::ROSUnit_Int,"/upload_uav_fire_paths");
   ROSUnit* ROSUnit_upload_uav_scan_path=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server,ROSUnit_msg_type::ROSUnit_Empty,"/upload_uav_scan_path");
   ROSUnit* ROSUnit_uav_control_set_path=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Client,ROSUnit_msg_type::ROSUnit_Poses,"uav_control/set_path");
+  ROSUnit* ROSUnit_distance_to_fire=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Publisher,ROSUnit_msg_type::ROSUnit_Float,"/distance_to_fire");
   ROSUnit_upload_uav_fire_paths->add_callback_msg_receiver(&navigator_ch3_main);//OK
   ROSUnit_upload_uav_scan_path->add_callback_msg_receiver(&navigator_ch3_main);//OK
   navigator_ch3_main.add_callback_msg_receiver(ROSUnit_uav_control_set_path);//OK
+  navigator_ch3_main.add_callback_msg_receiver(ROSUnit_distance_to_fire);
   //TODO: This will be changed to a topic
   // ROSUnit_upload_distance_to_fire* ROSUnit_upload_distance_to_fire_instance=new ROSUnit_upload_distance_to_fire("/upload_distance_to_fire",nh);
   // ROSUnit_upload_distance_to_fire_instance->add_callback_msg_receiver(&navigator_ch3_main);

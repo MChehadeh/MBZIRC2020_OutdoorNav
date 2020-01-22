@@ -1,9 +1,9 @@
-// Version: 1.0
-// Author: Pedro Henrique R. P. B. Silva
-// Date: 19 November 2019
+// Version: 2.0
+// Author: M. CHehadeh
+// Date: 22 Jan 2020
+// Release note: Added channels for emitter and receiver
+#pragma once
 
-#ifndef msg_receiver_H
-#define msg_receiver_H
 #include <iostream>
 #include "common_types.hpp"
 #include "DataMessage.hpp"
@@ -16,5 +16,5 @@ class msg_receiver {
     void assign_message_type_ID(msg_type i);
     msg_type get_message_type_ID();
     virtual void receive_msg_data(DataMessage* t_msg)=0;
+    virtual void receive_msg_data(DataMessage* t_msg,int channel_id);
 };
-#endif

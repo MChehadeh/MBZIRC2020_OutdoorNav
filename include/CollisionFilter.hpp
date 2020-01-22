@@ -6,7 +6,7 @@
 #include "filterPointMsg.hpp"
 #include <vector>       // For std::vector
 #include <algorithm>    // For std::sort
-
+#include <cmath>
 class CollisionFilter : public msg_receiver, public msg_emitter {
 
 private:
@@ -20,7 +20,7 @@ private:
     Vector3D<float> median;
     int counter = 0;
     const int median_filter_window_size = 5;
-    const int median_index = floor(median_filter_window_size/2.);
+    const int median_index = std::floor(median_filter_window_size/2.);
     const int confidence_num_of_averaged_samples = 10;
     building_sides side_filter;
 public:

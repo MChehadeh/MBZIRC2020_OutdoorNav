@@ -9,7 +9,6 @@
 #include "VelocityMsg.hpp"
 #include "HeadingMsg.hpp"
 #include "PositionMsg.hpp"
-#include "AccelerationMsg.hpp"
 
 class ROSUnit_Xsens : public ROSUnit{
 
@@ -20,9 +19,8 @@ class ROSUnit_Xsens : public ROSUnit{
         ros::Subscriber _sub_velocity;
         static AttitudeMsg attitude_msg;
         static VelocityMsg velocity_msg; 
-        static HeadingMsg heading_msg; 
+        static HeadingMsg heading_msg;
         static PositionMsg position_msg; 
-        static AccelerationMsg acceleration_msg;  
         static void callbackXsensPosition(const geometry_msgs::Vector3Stamped& msg_position);
         static void callbackXsensAttitude(const geometry_msgs::QuaternionStamped& msg_attitude);
         static void callbackXsensVelocity(const geometry_msgs::Vector3Stamped& msg_velocity);

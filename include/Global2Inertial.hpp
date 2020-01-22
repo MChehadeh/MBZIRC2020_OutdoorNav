@@ -20,7 +20,7 @@ private:
     Vector3D<double> calib_point1, calib_point2;
     double calibrated_global_to_inertial_angle;
     double calibrated_reference_inertial_heading;//TODO: This needs to be moved to XSens node
-    const Vector3D<double> antenna_pose{0.,0.1,0.1};
+    Vector3D<double> antenna_pose;
     Vector3D<double> last_known_orientation;
     Vector3D<double> transformPoint(Vector3D<double>);
     Vector3D<double> getEulerfromQuaternion(Quaternion);

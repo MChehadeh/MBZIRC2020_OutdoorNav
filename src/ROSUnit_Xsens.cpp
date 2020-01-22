@@ -6,8 +6,6 @@ VelocityMsg ROSUnit_Xsens::velocity_msg;
 HeadingMsg ROSUnit_Xsens::heading_msg;
 PositionMsg ROSUnit_Xsens::position_msg;
 
-AccelerationMsg ROSUnit_Xsens::acceleration_msg;
-
 ROSUnit_Xsens::ROSUnit_Xsens(ros::NodeHandle& t_main_handler) : ROSUnit(t_main_handler){
     _sub_attitude = t_main_handler.subscribe("filter/quaternion", 10, callbackXsensAttitude);
     _sub_position = t_main_handler.subscribe("filter/positionlla", 10, callbackXsensPosition);

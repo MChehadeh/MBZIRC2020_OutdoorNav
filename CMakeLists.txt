@@ -53,15 +53,17 @@ catkin_package(
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/ROSUnits
   ${catkin_INCLUDE_DIRS}
   include
   ${ReactPhysics3D_INCLUDE_DIRS}
-  /usr/local/include/reactphysics3d
+  ~/reactphysics3d/reactphysics3d-0.7.1/src
 )
 
 
 FILE(GLOB SOURCE_FILES *.hpp *.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/src/ROSUnits/*.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})

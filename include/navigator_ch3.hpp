@@ -11,12 +11,15 @@
 #include "EmptyMsg.hpp"
 #include "PoseMsg.hpp"
 #include "PosesMsg.hpp"
+#include "FloatMsg.hpp"
+#include "MissionStateManager.hpp"
 //The following simplest scenario is considered.
 // One drone scans the whole building exterior. Identifies the location of all fire sources. Then extinguishing starts.
 enum fire_id {wall_fire_gf, wall_fire_ff, wall_fire_sf, last_fire_id = wall_fire_sf};
 
 class navigator_ch3 : public msg_receiver, public msg_emitter{
 private:
+    const double nozzle_offset_to_center=0.8; //Assume tip is pointing to x+ direction
     double dist_to_wall, max_altitude, min_dist_to_floor, altitude_increment, GF_height, GF_FF_height;
     int external_wall_fire_counter=0;
     Rectangle GF_outline;

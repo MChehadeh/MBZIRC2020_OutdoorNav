@@ -22,6 +22,9 @@ Global2Inertial::Global2Inertial(){
     calibrated_reference_inertial_heading=45.*(M_1_PI/180.);
     Vector3D<double> calib_points_diff = calib_point2 - calib_point1;
     calibrated_global_to_inertial_angle = atan2(calib_points_diff.y, calib_points_diff.x);
+    antenna_pose.x=0.;
+    antenna_pose.y=0.1;
+    antenna_pose.z=0.1;
 }
 void Global2Inertial::receive_msg_data(DataMessage* t_msg)
 {
