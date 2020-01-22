@@ -1,0 +1,23 @@
+#pragma once
+#include "ros/ros.h"
+#include <outdoor_navigation/twoPointLine.h>
+#include <geometry_msgs/Point.h>
+
+#include "FireLineDescription.hpp"
+#include "CollisionFinder.hpp"
+#include "Vector3D.hpp"
+#include "ROSUnit.hpp"
+
+class ROSUnit_FireLocationServer : public ROSUnit{
+
+private:
+    ros::ServiceServer _srv_server;
+    static ROSUnit_FireLocationServer* _instance_ptr;
+    static FireLineDescription fireLineMsg;
+    static bool callBackServer(outdoor_navigation::twoPointLine::Request  &req, outdoor_navigation::twoPointLine::Response &res);
+    void receive_msg_data(DataMessage* t_msg);
+
+public:
+    ROSUnit_FireLocationServer(ros::NodeHandle&);
+    ~ROSUnit_FireLocationServer();
+};

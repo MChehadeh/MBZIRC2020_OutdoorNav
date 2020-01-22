@@ -1,0 +1,32 @@
+#include "ROSUnit_FireLocationServer.hpp"
+
+ROSUnit_FireLocationServer* ROSUnit_FireLocationServer::_instance_ptr = NULL;
+FireLineDescription ROSUnit_FireLocationServer::fireLineMsg;
+
+ROSUnit_FireLocationServer::ROSUnit_FireLocationServer(ros::NodeHandle& t_main_handler) : ROSUnit(t_main_handler){
+  _srv_server = t_main_handler.advertiseService ("two_point_line", callBackServer);
+  _instance_ptr = this;
+}
+
+ROSUnit_FireLocationServer::~ROSUnit_FireLocationServer() {
+}
+
+bool ROSUnit_FireLocationServer::callBackServer(outdoor_navigation::twoPointLine::Request  &req, outdoor_navigation::twoPointLine::Response &res)
+{
+    Vector3D<float> point1, point2;
+    point1.x = req.p1.x;
+    point1.y = req.p1.y;
+    point1.z = req.p1.z;
+
+    point2.x = req.p2.x;
+    point2.y = req.p2.y;
+    point2.z = req.p2.z;
+
+    fireLineMsg.setFireLineMessage(point1, point2);
+    _instance_ptr->emit_message((DataMessage*) &fireLineMsg);
+  
+  return true;
+}
+
+void ROSUnit_FireLocationServer::receive_msg_data(DataMessage* t_msg){
+}
