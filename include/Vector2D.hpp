@@ -1,13 +1,15 @@
-// Version: 2.0
+// Version: 2.1
 // Author: Mohamad Chehadeh
-// Date: 30 Dec 2019
-//Revision Note: Added static operations on vectors
+// Date: 23 Jan 2020
+// Revision Note: Added static operations on vectors
+// Minor Revision Note: Added conversion to Vector3D
 #pragma once 
-
+template  <class L> class Vector2D;
 #include <cstdint>
 #include <math.h>
-template <class T>  
+#include "Vector3D.hpp"
 
+template <class T>  
 class Vector2D
 {
         public:
@@ -63,6 +65,14 @@ class Vector2D
                         tmp.x = M(this->x);
                         tmp.y = M(this->y);
                         return tmp;
+                }
+
+                Vector3D<T> convertTo3D(T z){
+                        Vector3D<T> res;
+                        res.x=this->x;
+                        res.y=this->y;
+                        res.z=z;
+                        return res;
                 }
 
                 static double getL2Norm(Vector2D<T> vec1,Vector2D<T> vec2){

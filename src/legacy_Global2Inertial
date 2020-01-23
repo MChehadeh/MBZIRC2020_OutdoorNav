@@ -1,0 +1,39 @@
+#define planB_single_RTK
+
+#ifdef optitrack_positioning
+#undef planC_dual_RTK
+#undef planB_single_RTK
+#undef planA_GPS
+#elif defined(planC_dual_RTK)
+#undef optitrack_positioning
+#undef planB_single_RTK
+#undef planA_GPS
+#elif defined(planB_single_RTK)
+#undef optitrack_positioning
+#undef planC_dual_RTK
+#undef planA_GPS
+#elif defined(planA_GPS)
+#undef optitrack_positioning
+#undef planC_dual_RTK
+#undef planB_single_RTK
+#else
+#define optitrack_positioning
+#endif
+
+
+Global2Inertial Global2Inertial_transformer;
+ROSUnit_Xsens* orientation_receiver=new ROSUnit_Xsens(nh);
+#ifdef optitrack_positioning
+ROSUnit_Optitrack* position_receiver = new ROSUnit_Optitrack(nh);
+orientation_receiver->add_callback_msg_receiver(&Global2Inertial_transformer);
+#elif defined(planC_dual_RTK)
+ROSUnit* ROSUnit_inertial_heading=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Publisher,ROSUnit_msg_type::ROSUnit_Float,"/inertial_heading");
+#error planC_dual_RTK is not implemented yet
+#elif defined(planB_single_RTK)
+ROSUnit_RTK1* position_receiver=new ROSUnit_RTK1(nh);
+//orientation_receiver->add_callback_msg_receiver(&Global2Inertial_transformer);
+#elif defined(planA_GPS)
+ROSUnit_Xsens* position_receiver=new ROSUnit_Xsens(nh);
+#endif
+
+position_receiver->add_callback_msg_receiver(&Global2Inertial_transformer);//OK

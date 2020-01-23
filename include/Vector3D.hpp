@@ -1,7 +1,13 @@
+// Version: 1.1
+// Author: Mohamad Chehadeh
+// Date: 23 Jan 2020
+// Minor Revision Note: Added conversion to Vector2D
+
 #pragma once 
+template  <class L> class Vector3D;
 
 #include <cstdint>
-
+#include "Vector2D.hpp"
 template <class T>  
 
 class Vector3D
@@ -68,6 +74,13 @@ class Vector3D
                         tmp.z = M(this->z);
 
                         return tmp;
+                }
+
+                Vector2D<T> project_xy(){
+                        Vector2D<T> res;
+                        res.x=this->x;
+                        res.y=this->y;
+                        return res;
                 }
 
 };

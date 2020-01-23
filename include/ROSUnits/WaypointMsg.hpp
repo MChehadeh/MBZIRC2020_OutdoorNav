@@ -10,5 +10,5 @@ public:
 	msg_type getType();
 	const int getSize();
 
-	Waypoint waypoint;	//TODO: This should use Vector3D
+	Waypoint waypoint;
 };

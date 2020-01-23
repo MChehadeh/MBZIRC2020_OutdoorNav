@@ -9,8 +9,6 @@
 #include "MsgReceiver.hpp"
 #include "DataMessage.hpp"
 
-#undef UseEmittingToChannelScheme //Please refer to emit_message(DataMessage* t_msg) implementation for details on difference
-
 using namespace std;
 class msg_receiver;
 class msg_emitter{
@@ -18,10 +16,10 @@ private:
 
 protected:
     list<msg_receiver*> _list_of_msg_receivers;
-    int default_emitting_channel=0;
+    int emitting_channel=msg_broadcast_channel;
 public:
-    void setDefaultEmittingChannel(int);
-    int getDefaultEmittingChannel();
+    void setEmittingChannel(int);
+    int getEmittingChannel();
     msg_emitter();
     void add_callback_msg_receiver(msg_receiver* _callback_msg_receiver);
     void emit_message(DataMessage* t_msg);

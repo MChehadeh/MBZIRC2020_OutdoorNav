@@ -45,22 +45,36 @@ void navigator_ch3::receive_msg_data(DataMessage* t_msg)
         }
         emit_message(&t_wpts);
     }
-    else if(t_msg->getType() == msg_type::POSE)
-    {
-        latest_known_position.x = ((PoseMsg*)t_msg)->pose.x;
-        latest_known_position.y = ((PoseMsg*)t_msg)->pose.y;
-        latest_known_position.z = ((PoseMsg*)t_msg)->pose.z;
-        //Find tip distance to wall
-        Vector3D<double> nozzle_base_vector,nozzle_loc;
-        nozzle_base_vector.x=nozzle_offset_to_center;
-        // TODO Compensate for heading
-        //RotationMatrix3by3 rot_matrix;
-        //rot_matrix.Update(UAV_attitude_latest);
-        //nozzle_loc=rot_matrix.TransformVector(nozzle_base_vector);
-        nozzle_loc=nozzle_loc+latest_known_position;
-        FloatMsg distance_to_wall_msg;
-        distance_to_wall_msg.data=(float)this->getDistanceToBuilding(nozzle_loc);
-        emit_message(&distance_to_wall_msg);
+
+}
+
+void navigator_ch3::receive_msg_data(DataMessage* t_msg,int channel){
+    if (channel==receiving_channels::UAV_Position){
+        if(t_msg->getType() == msg_type::POSE)
+        {
+            latest_known_position.x = ((PoseMsg*)t_msg)->pose.x;
+            latest_known_position.y = ((PoseMsg*)t_msg)->pose.y;
+            latest_known_position.z = ((PoseMsg*)t_msg)->pose.z;
+            //Find tip distance to wall
+            Vector3D<double> nozzle_base_vector,nozzle_loc;
+            nozzle_base_vector.x=nozzle_offset_to_center;
+            // TODO Compensate for heading
+            RotationMatrix3by3 rot_matrix;
+            Vector3D<double> UAV_heading;
+            UAV_heading.z=last_known_heading;
+            rot_matrix.Update(UAV_heading);
+            nozzle_loc=rot_matrix.TransformVector(nozzle_base_vector);
+            nozzle_loc=nozzle_loc+latest_known_position;
+            FloatMsg distance_to_wall_msg;
+            distance_to_wall_msg.data=(float)this->getDistanceToBuilding(nozzle_loc);
+            emit_message(&distance_to_wall_msg);
+        }
+    }
+    else if (channel==receiving_channels::UAV_Orientation){
+        if(t_msg->getType() == msg_type::POSE)
+        {
+            last_known_heading= ((PoseMsg*)t_msg)->pose.z;
+        }
     }
 
 }
@@ -176,7 +190,8 @@ std::vector<Waypoint> navigator_ch3::generateWaypointsToCorridor()
 {
     return generateWaypointsToCorridor(launch_point,scanning_corridors[0].altitude);
 }
-    
+
+//TODO Note: This generates waypoints to the first corridor
 std::vector<Waypoint> navigator_ch3::generateWaypointsToCorridor(Vector3D<double> start_point,double corridor_altitude)
 {
     std::vector<Waypoint> t_generated_waypoints;
@@ -220,34 +235,48 @@ std::vector<Waypoint> navigator_ch3::generateWaypointsToCorridor(Vector3D<double
 
 std::vector<Waypoint> navigator_ch3::generateWaypointsToLandingPoint(Vector3D<double> start_point){
     std::vector<Waypoint> generated_waypoints;
-    generated_waypoints=this->generateWaypointsToCorridor(start_point,start_point.z);
-    Rectangle used_corridor;
-    used_corridor.altitude=start_point.z;
-    if (start_point.z>this->GF_FF_height+min_dist_to_floor){
-        used_corridor=SndF_outline;
-    }
-    else{
-        used_corridor=GF_outline;
-    }
     Vector2D<double> start_point_2d;
     start_point_2d.x=start_point.x;
     start_point_2d.y=start_point.y;
     Vector2D<double> landing_point_2d;
     landing_point_2d.x=landing_point.x;
     landing_point_2d.y=landing_point.y;
-    Vector2D<double> start_point_on_corridor_2d=used_corridor.getClosestPoint(start_point_2d);
-    Vector2D<double> end_point_on_corridor_2d=used_corridor.getClosestPoint(landing_point_2d);
-    std::vector<Vector2D<double>> path_on_corridor= used_corridor.generatePathSegmentFromTwoPoint(start_point_on_corridor_2d,end_point_on_corridor_2d);
+    Line2D line_from_start_to_land;
+    line_from_start_to_land.setPoint1(start_point_2d);
+    line_from_start_to_land.setPoint2(landing_point_2d);
     
-    for (int i=0;i<path_on_corridor.size();i++){
-        Waypoint t_wp;
-        Vector3D<double> t_pos_wp;
-        t_pos_wp.x=path_on_corridor[i].x;
-        t_pos_wp.y=path_on_corridor[i].y;
-        t_pos_wp.z=start_point.z;
-        t_wp.position=t_pos_wp;
-        t_wp.yaw=getHeadingToPoint(t_wp.position,landing_point);
-        generated_waypoints.push_back(t_wp);
+    Rectangle used_floor_outline;
+    if (start_point.z>this->GF_FF_height+min_dist_to_floor){
+        used_floor_outline=SndF_outline;
+
+    }
+    else{
+        used_floor_outline=GF_outline;
+    }
+    Rectangle used_corridor;
+    used_corridor = used_floor_outline;
+    used_corridor.altitude=start_point.z;
+
+    used_corridor.scaleBy((dist_to_wall*2+used_floor_outline.getSide1().getLength())/used_floor_outline.getSide1().getLength(),rect_sides::side1);
+    used_corridor.scaleBy((dist_to_wall*2+used_floor_outline.getSide2().getLength())/used_floor_outline.getSide2().getLength(),rect_sides::side2);
+    Vector2D<double> offset_floor_outline;
+    offset_floor_outline = used_floor_outline.getCenter() - used_corridor.getCenter();
+    used_corridor.translateBy(offset_floor_outline);
+    if (used_corridor.checkLineIntersection(line_from_start_to_land)){
+        Vector2D<double> start_point_on_corridor_2d=used_corridor.getClosestPoint(start_point_2d);
+        Vector2D<double> end_point_on_corridor_2d=used_corridor.getClosestPoint(landing_point_2d);
+        std::vector<Vector2D<double>> path_on_corridor= used_corridor.generatePathSegmentFromTwoPoint(start_point_on_corridor_2d,end_point_on_corridor_2d);
+        
+        for (int i=0;i<path_on_corridor.size();i++){
+            Waypoint t_wp;
+            Vector3D<double> t_pos_wp;
+            t_pos_wp.x=path_on_corridor[i].x;
+            t_pos_wp.y=path_on_corridor[i].y;
+            t_pos_wp.z=start_point.z;
+            t_wp.position=t_pos_wp;
+            t_wp.yaw=getHeadingToPoint(t_wp.position,landing_point);
+            generated_waypoints.push_back(t_wp);
+        }
     }
     Waypoint t_wp_final;
     Vector3D<double> elevated_landing_point=landing_point;
@@ -310,7 +339,107 @@ double navigator_ch3::getHeadingToPoint(Vector2D<double> base_point,Vector2D<dou
     Vector2D<double> t_diff=target_point-base_point;
     return atan2(t_diff.y,t_diff.x);
 }
+
 double navigator_ch3::getHeadingToPoint(Vector3D<double> base_point,Vector3D<double> target_point){
     Vector3D<double> t_diff=target_point-base_point;
     return atan2(t_diff.y,t_diff.x);
+}
+
+void navigator_ch3::updateBlanketFireParameters(Rectangle area_outline_para,double blanket_fire_scanning_altitude_para,double blanket_fire_dist_to_perimeter_para,double blanket_fire_side_step_size_para){
+    blanket_fire_scanning_altitude=blanket_fire_scanning_altitude_para;
+    blanket_fire_dist_to_perimeter=blanket_fire_dist_to_perimeter_para;
+    blanket_fire_side_step_size=blanket_fire_side_step_size_para;
+    area_outline=area_outline_para;
+
+    //Generate scanning path outline
+    scanning_path_outline = area_outline;
+
+    scanning_path_outline.scaleBy((-blanket_fire_dist_to_perimeter*2+area_outline.getSide1().getLength())/area_outline.getSide1().getLength(),rect_sides::side1);
+    scanning_path_outline.scaleBy((-blanket_fire_dist_to_perimeter*2+area_outline.getSide2().getLength())/area_outline.getSide2().getLength(),rect_sides::side2);
+    Vector2D<double> offset_scanning_outline;
+    offset_scanning_outline = area_outline.getCenter() - scanning_path_outline.getCenter();
+    scanning_path_outline.translateBy(offset_scanning_outline);
+
+    // VERY IMPORTANT! assumed tower and arena are parallel
+
+}
+
+std::vector<Waypoint> navigator_ch3::generateWaypointsForBlanketFireScanning(Vector3D<double> start_point){
+    std::vector<Waypoint> generated_waypoints;
+    // Find the no pass corridor
+    Rectangle no_pass_corridor;
+    no_pass_corridor = GF_outline;
+    no_pass_corridor.scaleBy((dist_to_wall*2+GF_outline.getSide1().getLength())/GF_outline.getSide1().getLength(),rect_sides::side1);
+    no_pass_corridor.scaleBy((dist_to_wall*2+GF_outline.getSide2().getLength())/GF_outline.getSide2().getLength(),rect_sides::side2);
+    Vector2D<double> offset_floor_outline;
+    offset_floor_outline = GF_outline.getCenter() - no_pass_corridor.getCenter();
+    no_pass_corridor.translateBy(offset_floor_outline);
+    //Generate first WP for altitude adjustment
+    Vector3D<double> start_point_alt_adj=start_point;
+    start_point_alt_adj.z=blanket_fire_scanning_altitude;
+    Waypoint t_wp_start_point_alt_adj;
+    t_wp_start_point_alt_adj.position=start_point_alt_adj;
+    t_wp_start_point_alt_adj.yaw=last_known_heading;
+    generated_waypoints.push_back(t_wp_start_point_alt_adj);
+    //Get to the first point in scanning path avoiding obstacles
+    Vector3D<double> first_scanning_point;
+    first_scanning_point.x=scanning_path_outline.getSide1().getPoint1().x;
+    first_scanning_point.y=scanning_path_outline.getSide1().getPoint1().y;
+    first_scanning_point.z=blanket_fire_scanning_altitude;
+    Vector2D<double> first_scanning_point_2d;
+    first_scanning_point_2d.x=first_scanning_point.x;
+    first_scanning_point_2d.y=first_scanning_point.y;
+
+    Vector2D<double> start_point_2d;
+    start_point_2d.x=start_point.x;
+    start_point_2d.y=start_point.y;
+    Line2D line_start_to_scanning_path;
+    line_start_to_scanning_path.setPoint1(start_point_2d);
+    line_start_to_scanning_path.setPoint2(first_scanning_point_2d);
+
+    if (no_pass_corridor.checkLineIntersection(line_start_to_scanning_path)){
+        Vector2D<double> start_point_on_corridor_2d=no_pass_corridor.getClosestPoint(start_point_2d);
+        Vector2D<double> end_point_on_corridor_2d=no_pass_corridor.getClosestPoint(first_scanning_point_2d);
+        std::vector<Vector2D<double>> path_on_corridor= no_pass_corridor.generatePathSegmentFromTwoPoint(start_point_on_corridor_2d,end_point_on_corridor_2d);
+        
+        for (int i=0;i<path_on_corridor.size();i++){
+            Waypoint t_wp;
+            Vector3D<double> t_pos_wp;
+            t_pos_wp.x=path_on_corridor[i].x;
+            t_pos_wp.y=path_on_corridor[i].y;
+            t_pos_wp.z=start_point.z;
+            t_wp.position=t_pos_wp;
+            t_wp.yaw=getHeadingToPoint(path_on_corridor[i],first_scanning_point_2d);
+            generated_waypoints.push_back(t_wp);
+        }
+    }
+    Waypoint t_wp_first_scanning_point;
+    t_wp_first_scanning_point.position=first_scanning_point;
+    t_wp_first_scanning_point.yaw=blanket_scanning_yaw;
+    generated_waypoints.push_back(t_wp_first_scanning_point);
+    //Generate zig-zag scanning path
+    Vector2D<double> side_shift_operator;
+    side_shift_operator=(scanning_path_outline.getSide1().getPoint2()-scanning_path_outline.getSide1().getPoint1())/(Vector2D<double>::getL2Norm(scanning_path_outline.getSide1().getPoint2()-scanning_path_outline.getSide1().getPoint1()));
+    side_shift_operator=side_shift_operator*blanket_fire_side_step_size;
+    Line2D scan_vertical_line=scanning_path_outline.getSide2();
+    bool vertical_line_sample_point1_first=true;
+    while (Vector2D<double>::getL2Norm(scan_vertical_line.getPoint1(),scanning_path_outline.getSide2().getPoint1())<scanning_path_outline.getSide1().getLength()){
+        Vector3D<double> p1=scan_vertical_line.getPoint1().convertTo3D(blanket_fire_scanning_altitude);
+        Vector3D<double> p2=scan_vertical_line.getPoint2().convertTo3D(blanket_fire_scanning_altitude);
+        Waypoint t_wp_1,t_wp_2;
+        t_wp_1.yaw=blanket_scanning_yaw;
+        t_wp_2.yaw=blanket_scanning_yaw;
+        if (vertical_line_sample_point1_first){
+            t_wp_1.position=p1;
+            t_wp_2.position=p2;
+        }
+        else{
+            t_wp_1.position=p2;
+            t_wp_2.position=p1;
+        }
+        generated_waypoints.push_back(t_wp_1);
+        generated_waypoints.push_back(t_wp_2);
+        scan_vertical_line.translateBy(side_shift_operator);
+    }
+    return generated_waypoints;
 }

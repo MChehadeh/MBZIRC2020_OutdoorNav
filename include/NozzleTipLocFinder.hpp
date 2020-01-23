@@ -6,7 +6,7 @@
 
 class NozzleTipLocFinder : public msg_emitter, public msg_receiver {
 private:
-    const double nozzle_offset_to_center=0.8; //TODO refactor
+    const double nozzle_offset_to_center=0.8;
     Vector3D<double> UAV_location_latest;
     Vector3D<double> UAV_attitude_latest;
 public:

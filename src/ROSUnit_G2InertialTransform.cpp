@@ -34,5 +34,5 @@ void ROSUnit_G2InertialTransform::receive_msg_data(DataMessage* t_msg)
     {
         data_to_send.pose.orientation.z = ((HeadingMsg*)t_msg)->yaw;   
     }
-    _pub_transform.publish(data_to_send);
+    _pub_transform.publish(data_to_send); //TODO: This is wrong
 }

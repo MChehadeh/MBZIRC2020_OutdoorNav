@@ -1,4 +1,6 @@
 #include "Line2D.hpp"
+
+
 void Line2D::setPoint1(Vector2D<double> t_point){
     point1=t_point;
     diff=point2-point1;
@@ -35,7 +37,6 @@ Vector2D<double> Line2D::getCenter(){
 
 void Line2D::scaleBy(double t_scale){
     setPoint2(point2*t_scale);
-
 }
 void Line2D::translateBy(Vector2D<double> t_offset){
     setPoint1(point1+t_offset);
@@ -56,6 +57,7 @@ void Line2D::translateBy(Vector2D<double> t_offset){
 //   const vec2 projection = v + t * (w - v);  // Projection falls on the segment
 //   return distance(p, projection);
 // }
+
 Vector2D<double> Line2D::getClosestPoint(Vector2D<double> t_point){
     Vector2D<double> t_res;
     double t_aux1=Vector2D<double>::getL2NormSquared(diff);
@@ -76,3 +78,16 @@ bool Line2D::checkPointIntesection(Vector2D<double> t_point){
     return false;
 }
 
+//https://stackoverflow.com/questions/3838329/how-can-i-check-if-two-segments-intersect
+bool Line2D::ccw(Vector2D<double> A,Vector2D<double> B,Vector2D<double> C){
+    return (C.y-A.y) * (B.x-A.x) > (B.y-A.y) * (C.x-A.x);
+}
+    
+bool Line2D::check_lines_intersection(Line2D line1,Line2D line2){
+    Vector2D<double> A,B,C,D;
+    A=line1.getPoint1();
+    B=line1.getPoint2();
+    C=line1.getPoint1();
+    D=line1.getPoint2();
+    return !(ccw(A,C,D) == ccw(B,C,D)) && !(ccw(A,B,C) == ccw(A,B,D));
+}

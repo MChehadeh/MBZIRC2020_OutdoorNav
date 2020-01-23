@@ -1,3 +1,8 @@
+// Version: 3.0
+// Author: Mohamad Chehadeh
+// Date: 23 January 2020
+// Release Note: Added check line intersection with a rectangle
+
 #pragma once
 #include "Vector2D.hpp"
 #include "Line2D.hpp"
@@ -21,6 +26,7 @@ public:
     void translateBy(Vector2D<double>);
     Vector2D<double> getClosestPoint(Vector2D<double> input_pt);
     bool checkPointIntersection(Vector2D<double>);
+    bool checkLineIntersection(Line2D);
     std::vector<Vector2D<double>> generateClosedPathFromStartingPoint(Vector2D<double>);
     std::vector<Vector2D<double>> generatePathSegmentFromTwoPoint(Vector2D<double>,Vector2D<double>);
     Line2D getSide1();

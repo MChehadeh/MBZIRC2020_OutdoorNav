@@ -83,35 +83,21 @@ int main(int argc, char **argv)
 
   //Collision Space Model
   CollisionFinder fireLocationFinder{GF, SndF, GF_FF_height, SndF_height};
+  CollisionFilter fireLocationFilter;
+
   //*********************************************************************************
   //*************************** Communication Setup *********************************
   //*********************************************************************************
-  // Inertial Frame Transformation
-  ROSUnit_G2InertialTransform* inertialframe_transmitter = new ROSUnit_G2InertialTransform(nh);
-  Global2Inertial Global2Inertial_transformer;
-
-  // Fire Location Estimators
-  ROSUnit* estimatedFireDirection = ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server,ROSUnit_msg_type::ROSUnit_Vector,"/set_fire_direction");
-  CollisionFilter fireLocationFilter;
-
   // Position and Orientation Sources
-  ROSUnit_Xsens* orientation_receiver=new ROSUnit_Xsens(nh);
-  #ifdef optitrack_positioning
-  ROSUnit_Optitrack* position_receiver = new ROSUnit_Optitrack(nh);
-  orientation_receiver->add_callback_msg_receiver(&Global2Inertial_transformer);
-  #elif defined(planC_dual_RTK)
-  #error planC_dual_RTK is not implemented yet
-  #elif defined(planB_single_RTK)
-  ROSUnit_RTK1* position_receiver=new ROSUnit_RTK1(nh);
-  orientation_receiver->add_callback_msg_receiver(&Global2Inertial_transformer);
-  #elif defined(planA_GPS)
-  ROSUnit_Xsens* position_receiver=new ROSUnit_Xsens(nh);
-  #endif
-  ROSUnit* ROSUnit_inertial_frame_pos=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Publisher,ROSUnit_msg_type::ROSUnit_Point,"/inertial_position");
-  position_receiver->add_callback_msg_receiver(&Global2Inertial_transformer);//OK
-  Global2Inertial_transformer.add_callback_msg_receiver(ROSUnit_inertial_frame_pos);//OK
-  Global2Inertial_transformer.add_callback_msg_receiver(&navigator_ch3_main);//OK
-  estimatedFireDirection->add_callback_msg_receiver(&fireLocationFinder);//OK
+  ROSUnit* ROSUnit_uav_orientation = ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Subscriber,ROSUnit_msg_type::ROSUnit_Point,"uav_control/uav_orientation");
+  ROSUnit* ROSUnit_uav_position = ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Subscriber,ROSUnit_msg_type::ROSUnit_Point,"uav_control/uav_position");
+  ROSUnit_uav_orientation->setEmittingChannel((int)navigator_ch3::receiving_channels::UAV_Orientation);
+  ROSUnit_uav_position->setEmittingChannel((int)navigator_ch3::receiving_channels::UAV_Position);
+
+  ROSUnit* ROSUnit_estimatedFireDirection = ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server,ROSUnit_msg_type::ROSUnit_Vector,"/set_fire_direction");
+  ROSUnit_uav_position->add_callback_msg_receiver(&navigator_ch3_main);
+  ROSUnit_uav_orientation->add_callback_msg_receiver(&navigator_ch3_main);
+  ROSUnit_estimatedFireDirection->add_callback_msg_receiver(&fireLocationFinder);//OK
   fireLocationFinder.add_callback_msg_receiver(&fireLocationFilter);//OK
   fireLocationFilter.add_callback_msg_receiver(&navigator_ch3_main);//OK
   ROSUnit* ROSUnit_update_outdoor_nav_state_instance=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Client,ROSUnit_msg_type::ROSUnit_Int,"ex_bldg_fire_mm/update_outdoor_nav_state");
@@ -125,11 +111,6 @@ int main(int argc, char **argv)
   ROSUnit_upload_uav_scan_path->add_callback_msg_receiver(&navigator_ch3_main);//OK
   navigator_ch3_main.add_callback_msg_receiver(ROSUnit_uav_control_set_path);//OK
   navigator_ch3_main.add_callback_msg_receiver(ROSUnit_distance_to_fire);
-  //TODO: This will be changed to a topic
-  // ROSUnit_upload_distance_to_fire* ROSUnit_upload_distance_to_fire_instance=new ROSUnit_upload_distance_to_fire("/upload_distance_to_fire",nh);
-  // ROSUnit_upload_distance_to_fire_instance->add_callback_msg_receiver(&navigator_ch3_main);
-  // Global2Inertial_transformer.add_callback_msg_receiver(&navigator_ch3_main);
-  // navigator_ch3_main.add_callback_msg_receiver()
 
 
   while (ros::ok())

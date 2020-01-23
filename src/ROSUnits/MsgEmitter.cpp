@@ -11,16 +11,16 @@ void msg_emitter::add_callback_msg_receiver(msg_receiver* _callback_msg_receiver
 }
 
 void msg_emitter::emit_message(DataMessage* t_msg){
-    std::list<msg_receiver*>::iterator it;
-    #ifndef UseEmittingToChannelScheme
-    for (it = _list_of_msg_receivers.begin(); it != _list_of_msg_receivers.end(); ++it){
-        (*it)->receive_msg_data(t_msg);
+    if (this->emitting_channel!=msg_broadcast_channel){
+        this->emit_message(t_msg,this->emitting_channel);
     }
-    #else
-    for (it = _list_of_msg_receivers.begin(); it != _list_of_msg_receivers.end(); ++it){
-        (*it)->receive_msg_data(t_msg,default_emitting_channel);
+    else{
+        std::list<msg_receiver*>::iterator it;
+        for (it = _list_of_msg_receivers.begin(); it != _list_of_msg_receivers.end(); ++it){
+            (*it)->receive_msg_data(t_msg);
+        }
     }
-    #endif
+
 }
 
 void msg_emitter::emit_message(DataMessage* t_msg,int t_channel_id){
@@ -33,10 +33,10 @@ void msg_emitter::emit_message(DataMessage* t_msg,int t_channel_id){
 msg_emitter::msg_emitter(){
 }
 
-void msg_emitter::setDefaultEmittingChannel(int t_ch){
-    this->default_emitting_channel=t_ch;
+void msg_emitter::setEmittingChannel(int t_ch){
+    this->emitting_channel=t_ch;
 }
 
-int msg_emitter::getDefaultEmittingChannel(){
-    return default_emitting_channel;
+int msg_emitter::getEmittingChannel(){
+    return emitting_channel;
 }

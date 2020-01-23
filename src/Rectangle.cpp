@@ -204,6 +204,11 @@ std::vector<Vector2D<double>> Rectangle::generatePathSegmentFromTwoPoint(Vector2
     return wayPoints2D;
 }
 
+bool Rectangle::checkLineIntersection(Line2D t_line){
+    return (Line2D::check_lines_intersection(t_line,this->getSide1()) || Line2D::check_lines_intersection(t_line,this->getSide2()) ||
+    Line2D::check_lines_intersection(t_line,this->getSide3()) || Line2D::check_lines_intersection(t_line,this->getSide4()));
+}
+
 // TODO: write a sorting algorithm to generate a path in elegant way
 // void reorder_vec(vector<char>& vA, vector<size_t>& vOrder)  
 // {   

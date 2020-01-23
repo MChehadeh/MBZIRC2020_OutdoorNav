@@ -19,6 +19,9 @@ msg_receiver::msg_receiver(){
     // std::cout<<"msg_receiver"<<std::endl;
 }
 
+void msg_receiver::receive_msg_data(DataMessage* t_msg){
+    this->receive_msg_data(t_msg,msg_broadcast_channel);
+}
 void msg_receiver::receive_msg_data(DataMessage* t_msg,int channel_id){
 
 }

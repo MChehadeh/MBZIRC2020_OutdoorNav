@@ -1,27 +1,6 @@
 #pragma once
 #include <stdint.h>
 
-#define planB_single_RTK
-
-#ifdef optitrack_positioning
-#undef planC_dual_RTK
-#undef planB_single_RTK
-#undef planA_GPS
-#elif defined(planC_dual_RTK)
-#undef optitrack_positioning
-#undef planB_single_RTK
-#undef planA_GPS
-#elif defined(planB_single_RTK)
-#undef optitrack_positioning
-#undef planC_dual_RTK
-#undef planA_GPS
-#elif defined(planA_GPS)
-#undef optitrack_positioning
-#undef planC_dual_RTK
-#undef planB_single_RTK
-#else
-#define optitrack_positioning
-#endif
 
 const struct tPacketProp{
 	uint8_t pad_len = 3;
