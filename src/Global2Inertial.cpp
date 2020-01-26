@@ -13,6 +13,7 @@
 //     return d*1000; // meters
 // }
 Global2Inertial::Global2Inertial(){
+    //TODO: Ensure altitude is calibrated
     calib_point1.x=0;
     calib_point1.y=0;
     calib_point1.z=0;
@@ -48,8 +49,8 @@ void Global2Inertial::receive_msg_data(DataMessage* t_msg)
         results_msg.pose.z = results.z;
         
         this->emit_message((DataMessage*)&results_msg);
-        this->emit_message((DataMessage*)&_eulerAtt);
-        this->emit_message((DataMessage*)&_bodyHeading);
+        //this->emit_message((DataMessage*)&_eulerAtt);
+        //this->emit_message((DataMessage*)&_bodyHeading);
     }
     else if (t_msg->getType()==msg_type::rtkposition){
         #ifdef planC_dual_RTK

@@ -36,7 +36,12 @@ Vector2D<double> Line2D::getCenter(){
 }
 
 void Line2D::scaleBy(double t_scale){
-    setPoint2(point2*t_scale);
+    Line2D t_aux_line=*this;
+    t_aux_line.translateBy(this->getPoint1()*-1.);
+    t_aux_line.setPoint2(t_aux_line.getPoint2()*t_scale);
+    t_aux_line.translateBy(this->getPoint1());
+    this->setPoint1(t_aux_line.getPoint1());
+    this->setPoint2(t_aux_line.getPoint2());
 }
 void Line2D::translateBy(Vector2D<double> t_offset){
     setPoint1(point1+t_offset);

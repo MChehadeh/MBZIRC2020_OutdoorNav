@@ -1,6 +1,8 @@
 #include "navigator_ch3.hpp"
 #define show_internals
 using namespace std;
+
+//TODO: Refactor to eliminate many repitions in the code
 navigator_ch3::navigator_ch3(){
 }
 
@@ -25,12 +27,15 @@ void navigator_ch3::receive_msg_data(DataMessage* t_msg)
             t_wp_pose.yaw=pathToFire[i].yaw;
             t_wpts.p.poses.push_back(t_wp_pose);
         }
+        #ifdef show_internals
+        print_utility::print_waypoint(pathToFire);
+        #endif
         emit_message(&t_wpts);
     }
     else if (t_msg->getType()==msg_type::EMPTY){ //TODO: Refactor to reflect scan path request
 
         std::vector<Waypoint> scanning_path=this->generateWaypointsToCorridor(launch_point,scanning_corridors[0].altitude);
-        std::vector<Waypoint> t_scanning_path_on_corridor=this->generateWaypointsForScanning(scanning_path.end()->position);
+        std::vector<Waypoint> t_scanning_path_on_corridor=this->generateWaypointsForScanning((scanning_path.end()-1)->position);
         for (int i=0;i<t_scanning_path_on_corridor.size();i++){
             scanning_path.push_back(t_scanning_path_on_corridor[i]);
         }
@@ -43,6 +48,9 @@ void navigator_ch3::receive_msg_data(DataMessage* t_msg)
             t_wp_pose.yaw=scanning_path[i].yaw;
             t_wpts.p.poses.push_back(t_wp_pose);
         }
+        #ifdef show_internals
+        print_utility::print_waypoint(scanning_path);
+        #endif
         emit_message(&t_wpts);
     }
 
@@ -151,6 +159,10 @@ std::vector<Waypoint> navigator_ch3::generateWaypointsForScanning(Vector3D<doubl
     {
         std::vector<Vector2D<double>> res_path;
         res_path = scanning_corridors[i].generateClosedPathFromStartingPoint(start_point_2d);
+        #ifdef show_internals
+        print_utility::print_vec_3d(start_point);
+        print_utility::print_vec_2d(res_path);
+        #endif
         for (int j=0; j<res_path.size(); j++){
             Waypoint t_wp;
             t_wp.position.x = res_path[j].x;
@@ -160,6 +172,11 @@ std::vector<Waypoint> navigator_ch3::generateWaypointsForScanning(Vector3D<doubl
             t_generated_waypoints.push_back(t_wp);
         }
     }
+    #ifdef show_internals
+
+    print_utility::print_vec_rect(scanning_corridors);
+    print_utility::print_waypoint(t_generated_waypoints);
+    #endif
     return t_generated_waypoints;
 }
 

@@ -1,3 +1,7 @@
+// Version: 1.1
+// Author: Mohamad Chehadeh
+// Date: 26 Jan 2020
+// Revision Note: Moved from Outdoor Navigation to UAV Control
 #pragma once
 
 #include "MsgEmitter.hpp"

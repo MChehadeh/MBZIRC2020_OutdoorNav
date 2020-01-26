@@ -30,7 +30,7 @@ int main(int argc, char **argv)
   //*********************************************************************************
   //***************************ROS SETUP****************************************
   //*********************************************************************************
-  ros::init(argc, argv, "outdoor_navigation_node");
+  ros::init(argc, argv, "outdoor_navigation");
   ros::NodeHandle nh;
   ros::Rate loop_rate(100);
   ROSUnit_Factory ROSUnit_Factory_main{nh};
@@ -85,6 +85,27 @@ int main(int argc, char **argv)
   CollisionFinder fireLocationFinder{GF, SndF, GF_FF_height, SndF_height};
   CollisionFilter fireLocationFilter;
 
+  //Add fire locations for testing.
+  filterPointMsg fire_1,fire_2,fire_3;
+  Vector3D<float> fire_1_loc,fire_2_loc,fire_3_loc;
+  fire_1_loc.x=0;
+  fire_1_loc.y=3;
+  fire_1_loc.z=3;
+  fire_1.filterPoint=fire_1_loc;
+  fire_1.side_of_hit=building_sides::side1;
+  fire_2_loc.x=3;
+  fire_2_loc.y=0;
+  fire_2_loc.z=6;
+  fire_2.filterPoint=fire_2_loc;
+  fire_2.side_of_hit=building_sides::side2;
+  fire_3_loc.x=5;
+  fire_3_loc.y=3;
+  fire_3_loc.z=11;
+  fire_3.filterPoint=fire_3_loc;
+  fire_3.side_of_hit=building_sides::side3;
+
+  navigator_ch3_main.receive_msg_data()
+
   //*********************************************************************************
   //*************************** Communication Setup *********************************
   //*********************************************************************************
@@ -94,7 +115,7 @@ int main(int argc, char **argv)
   ROSUnit_uav_orientation->setEmittingChannel((int)navigator_ch3::receiving_channels::UAV_Orientation);
   ROSUnit_uav_position->setEmittingChannel((int)navigator_ch3::receiving_channels::UAV_Position);
 
-  ROSUnit* ROSUnit_estimatedFireDirection = ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server,ROSUnit_msg_type::ROSUnit_Vector,"/set_fire_direction");
+  ROSUnit* ROSUnit_estimatedFireDirection = ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server,ROSUnit_msg_type::ROSUnit_Vector,"outdoor_navigation/set_fire_direction");
   ROSUnit_uav_position->add_callback_msg_receiver(&navigator_ch3_main);
   ROSUnit_uav_orientation->add_callback_msg_receiver(&navigator_ch3_main);
   ROSUnit_estimatedFireDirection->add_callback_msg_receiver(&fireLocationFinder);//OK
@@ -103,10 +124,10 @@ int main(int argc, char **argv)
   ROSUnit* ROSUnit_update_outdoor_nav_state_instance=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Client,ROSUnit_msg_type::ROSUnit_Int,"ex_bldg_fire_mm/update_outdoor_nav_state");
   MainMissionStateManager.add_callback_msg_receiver(ROSUnit_update_outdoor_nav_state_instance);//OK
 
-  ROSUnit* ROSUnit_upload_uav_fire_paths=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server,ROSUnit_msg_type::ROSUnit_Int,"/upload_uav_fire_paths");
-  ROSUnit* ROSUnit_upload_uav_scan_path=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server,ROSUnit_msg_type::ROSUnit_Empty,"/upload_uav_scan_path");
+  ROSUnit* ROSUnit_upload_uav_fire_paths=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server,ROSUnit_msg_type::ROSUnit_Int,"outdoor_navigation/upload_uav_fire_paths");
+  ROSUnit* ROSUnit_upload_uav_scan_path=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server,ROSUnit_msg_type::ROSUnit_Empty,"outdoor_navigation/upload_uav_scan_path");
   ROSUnit* ROSUnit_uav_control_set_path=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Client,ROSUnit_msg_type::ROSUnit_Poses,"uav_control/set_path");
-  ROSUnit* ROSUnit_distance_to_fire=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Publisher,ROSUnit_msg_type::ROSUnit_Float,"/distance_to_fire");
+  ROSUnit* ROSUnit_distance_to_fire=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Publisher,ROSUnit_msg_type::ROSUnit_Float,"outdoor_navigation/distance_to_fire");
   ROSUnit_upload_uav_fire_paths->add_callback_msg_receiver(&navigator_ch3_main);//OK
   ROSUnit_upload_uav_scan_path->add_callback_msg_receiver(&navigator_ch3_main);//OK
   navigator_ch3_main.add_callback_msg_receiver(ROSUnit_uav_control_set_path);//OK

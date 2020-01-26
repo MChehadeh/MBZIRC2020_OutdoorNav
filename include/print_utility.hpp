@@ -1,17 +1,28 @@
+#pragma once
+
 #include <vector>
 #include <iostream>
 #include "navigator_ch3.hpp"
+#include "Waypoint.hpp"
+class print_utility{
+public:
+    static void print_vec_3d(std::vector<Vector3D<double>> lst_vec);
 
-using namespace std;
-#pragma once
-void print_vec_3d(vector<Vector3D<double>> lst_vec);
+    static void print_vec_3d(Vector3D<double> lst_vec);
 
-void print_vec_3d(Vector3D<double> lst_vec);
+    static void print_vec_2d(std::vector<Vector2D<double>> lst_vec);
 
-void print_vec_rect(vector<Rectangle> lst_rect);
+    static void print_vec_2d(Vector2D<double> lst_vec);
 
-void print_vec_rect(Rectangle lst_rect);
+    static void print_vec_rect(std::vector<Rectangle> lst_rect);
 
-void print_vec_line(vector<Line2D> lst_line);
+    static void print_vec_rect(Rectangle lst_rect);
 
-void print_vec_line(Line2D lst_line);
+    static void print_vec_line(std::vector<Line2D> lst_line);
+
+    static void print_vec_line(Line2D lst_line);
+
+    static void print_waypoint(std::vector<Waypoint>);
+
+    static void print_waypoint(Waypoint );
+};
