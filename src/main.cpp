@@ -104,8 +104,9 @@ int main(int argc, char **argv)
   fire_3.filterPoint=fire_3_loc;
   fire_3.side_of_hit=building_sides::side3;
 
-  navigator_ch3_main.receive_msg_data()
-
+  navigator_ch3_main.receive_msg_data(&fire_1);
+  navigator_ch3_main.receive_msg_data(&fire_2);
+  navigator_ch3_main.receive_msg_data(&fire_3);
   //*********************************************************************************
   //*************************** Communication Setup *********************************
   //*********************************************************************************
@@ -132,7 +133,6 @@ int main(int argc, char **argv)
   ROSUnit_upload_uav_scan_path->add_callback_msg_receiver(&navigator_ch3_main);//OK
   navigator_ch3_main.add_callback_msg_receiver(ROSUnit_uav_control_set_path);//OK
   navigator_ch3_main.add_callback_msg_receiver(ROSUnit_distance_to_fire);
-
 
   while (ros::ok())
   {

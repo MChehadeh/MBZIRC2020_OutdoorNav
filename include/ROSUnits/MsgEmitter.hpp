@@ -1,7 +1,7 @@
-// Version: 2.0
+// Version: 2.1
 // Author: M. CHehadeh
-// Date: 22 Jan 2020
-// Release note: Added channels for emitter and receiver
+// Date: 26 Jan 2020
+// Release note: Added unitcast/mulitcast handling to emitters
 #pragma once
 #include <vector>
 #include <iterator> 
