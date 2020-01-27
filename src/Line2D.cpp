@@ -1,6 +1,5 @@
 #include "Line2D.hpp"
 
-
 void Line2D::setPoint1(Vector2D<double> t_point){
     point1=t_point;
     diff=point2-point1;
@@ -43,6 +42,7 @@ void Line2D::scaleBy(double t_scale){
     this->setPoint1(t_aux_line.getPoint1());
     this->setPoint2(t_aux_line.getPoint2());
 }
+
 void Line2D::translateBy(Vector2D<double> t_offset){
     setPoint1(point1+t_offset);
     setPoint2(point2+t_offset);
@@ -92,7 +92,7 @@ bool Line2D::check_lines_intersection(Line2D line1,Line2D line2){
     Vector2D<double> A,B,C,D;
     A=line1.getPoint1();
     B=line1.getPoint2();
-    C=line1.getPoint1();
-    D=line1.getPoint2();
+    C=line2.getPoint1();
+    D=line2.getPoint2();
     return !(ccw(A,C,D) == ccw(B,C,D)) && !(ccw(A,B,C) == ccw(A,B,D));
 }

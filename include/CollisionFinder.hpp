@@ -21,6 +21,7 @@ private:
     rp3d::ProxyShape* building_SndF;
 
 public:
+    // Important note about the model: side1 must align with inertial x-axis
     static Vector3D<float> getNormalVector(Vector3D<float> world_normal, building_sides& hit_side);
     static Vector3D<float> getNormalVector(building_sides hit_side);
     CollisionFinder(Rectangle t_GF_outline, Rectangle t_SndF_outline, double GF_FF_height, double SndF_height);

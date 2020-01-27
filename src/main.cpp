@@ -25,6 +25,11 @@ const double dist_to_wall=1.5;//Gap to wall for the corridor
 const double GF_FF_height=9;//Height for GF+FF
 const double GF_height=4.5;
 const double SndF_height=3;
+//Blanket Parameters
+const double blanket_fire_scanning_altitude=15;
+const double blanket_fire_dist_to_perimeter=2;
+const double blanket_fire_side_step_size=3;
+
 int main(int argc, char **argv)
 {
   //*********************************************************************************
@@ -39,6 +44,7 @@ int main(int argc, char **argv)
   //************************ Environement Model Setup *******************************
   //*********************************************************************************
   //Challenge 3 Navigator
+  //Important note about the model: side1 must align with inertial x-axis
   Vector2D<double> side1_GF_p1,side1_GF_p2,side2_GF_p2;
   side1_GF_p1.x=0;
   side1_GF_p1.y=0;
@@ -55,7 +61,15 @@ int main(int argc, char **argv)
   side2_SndF_p2.x=0;
   side2_SndF_p2.y=5;
 
-  Line2D side1_GF,side2_GF,side1_SndF,side2_SndF;
+  Vector2D<double> side1_AreaOutline_p1,side1_AreaOutline_p2,side2_AreaOutline_p2;
+  side1_AreaOutline_p1.x=-10;
+  side1_AreaOutline_p1.y=-10;
+  side1_AreaOutline_p2.x=15;
+  side1_AreaOutline_p2.y=-10;
+  side2_AreaOutline_p2.x=-10;
+  side2_AreaOutline_p2.y=15;
+
+  Line2D side1_GF,side2_GF,side1_SndF,side2_SndF,side1_AreaOutline,side2_AreaOutline;
   side1_GF.setPoint1(side1_GF_p1);
   side1_GF.setPoint2(side1_GF_p2);
   side2_GF.setPoint1(side1_GF_p1);
@@ -66,11 +80,16 @@ int main(int argc, char **argv)
   side2_SndF.setPoint1(side1_SndF_p1);
   side2_SndF.setPoint2(side2_SndF_p2);
 
-  Rectangle GF,SndF;
+  side1_AreaOutline.setPoint1(side1_AreaOutline_p1);
+  side1_AreaOutline.setPoint2(side1_AreaOutline_p2);
+  side2_AreaOutline.setPoint1(side1_AreaOutline_p1);
+  side2_AreaOutline.setPoint2(side2_AreaOutline_p2);
+
+  Rectangle GF,SndF,AreaOutline;
   
   GF.updateRectangleSides(side1_GF,side2_GF);
   SndF.updateRectangleSides(side1_SndF,side2_SndF);
-
+  AreaOutline.updateRectangleSides(side1_AreaOutline,side2_AreaOutline);
   //Navigation Space Model
   navigator_ch3 navigator_ch3_main{GF,SndF,altitude_increment,min_dist_to_floor,max_altitude,dist_to_wall,GF_FF_height,GF_height};
   Vector3D<double> launch_point,landing_point;
@@ -80,11 +99,15 @@ int main(int argc, char **argv)
   landing_point=launch_point;
   navigator_ch3_main.updateLaunchPoint(launch_point);
   navigator_ch3_main.updateLandingPoint(landing_point);
+  navigator_ch3_main.updateBlanketFireParameters(AreaOutline,blanket_fire_scanning_altitude,blanket_fire_dist_to_perimeter,blanket_fire_side_step_size);
 
   //Collision Space Model
   CollisionFinder fireLocationFinder{GF, SndF, GF_FF_height, SndF_height};
   CollisionFilter fireLocationFilter;
 
+
+
+  #ifdef debug_mode
   //Add fire locations for testing.
   filterPointMsg fire_1,fire_2,fire_3;
   Vector3D<float> fire_1_loc,fire_2_loc,fire_3_loc;
@@ -92,21 +115,29 @@ int main(int argc, char **argv)
   fire_1_loc.y=3;
   fire_1_loc.z=3;
   fire_1.filterPoint=fire_1_loc;
-  fire_1.side_of_hit=building_sides::side1;
+  fire_1.side_of_hit=building_sides::side2;
   fire_2_loc.x=3;
   fire_2_loc.y=0;
   fire_2_loc.z=6;
   fire_2.filterPoint=fire_2_loc;
-  fire_2.side_of_hit=building_sides::side2;
+  fire_2.side_of_hit=building_sides::side1;
   fire_3_loc.x=5;
   fire_3_loc.y=3;
   fire_3_loc.z=11;
   fire_3.filterPoint=fire_3_loc;
-  fire_3.side_of_hit=building_sides::side3;
+  fire_3.side_of_hit=building_sides::side4;
 
-  navigator_ch3_main.receive_msg_data(&fire_1);
-  navigator_ch3_main.receive_msg_data(&fire_2);
-  navigator_ch3_main.receive_msg_data(&fire_3);
+  navigator_ch3_main.receive_msg_data((DataMessage*)&fire_1);
+  navigator_ch3_main.receive_msg_data((DataMessage*)&fire_2);
+  navigator_ch3_main.receive_msg_data((DataMessage*)&fire_3);
+
+  PoseMsg initial_position;
+  initial_position.pose.x=7;
+  initial_position.pose.y=5;
+  initial_position.pose.z=5;
+  initial_position.pose.yaw=0;
+  navigator_ch3_main.receive_msg_data(&initial_position,navigator_ch3::UAV_Position);
+  #endif
   //*********************************************************************************
   //*************************** Communication Setup *********************************
   //*********************************************************************************
@@ -127,10 +158,18 @@ int main(int argc, char **argv)
 
   ROSUnit* ROSUnit_upload_uav_fire_paths=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server,ROSUnit_msg_type::ROSUnit_Int,"outdoor_navigation/upload_uav_fire_paths");
   ROSUnit* ROSUnit_upload_uav_scan_path=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server,ROSUnit_msg_type::ROSUnit_Empty,"outdoor_navigation/upload_uav_scan_path");
+  ROSUnit* ROSUnit_upload_uav_landing_path=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server,ROSUnit_msg_type::ROSUnit_Empty,"outdoor_navigation/upload_uav_landing_path");
+  ROSUnit* ROSUnit_upload_uav_ground_scan_path=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server,ROSUnit_msg_type::ROSUnit_Empty,"outdoor_navigation/upload_uav_ground_scan_path");
   ROSUnit* ROSUnit_uav_control_set_path=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Client,ROSUnit_msg_type::ROSUnit_Poses,"uav_control/set_path");
   ROSUnit* ROSUnit_distance_to_fire=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Publisher,ROSUnit_msg_type::ROSUnit_Float,"outdoor_navigation/distance_to_fire");
+  ROSUnit_upload_uav_fire_paths->setEmittingChannel(navigator_ch3::Fire_Waypoints);
   ROSUnit_upload_uav_fire_paths->add_callback_msg_receiver(&navigator_ch3_main);//OK
+  ROSUnit_upload_uav_scan_path->setEmittingChannel(navigator_ch3::Wall_Scanning_Waypoints);
   ROSUnit_upload_uav_scan_path->add_callback_msg_receiver(&navigator_ch3_main);//OK
+  ROSUnit_upload_uav_landing_path->setEmittingChannel(navigator_ch3::Landing_Waypoints);
+  ROSUnit_upload_uav_landing_path->add_callback_msg_receiver(&navigator_ch3_main);//OK
+  ROSUnit_upload_uav_ground_scan_path->setEmittingChannel(navigator_ch3::Ground_Scanning_Waypoints);
+  ROSUnit_upload_uav_ground_scan_path->add_callback_msg_receiver(&navigator_ch3_main);
   navigator_ch3_main.add_callback_msg_receiver(ROSUnit_uav_control_set_path);//OK
   navigator_ch3_main.add_callback_msg_receiver(ROSUnit_distance_to_fire);
 

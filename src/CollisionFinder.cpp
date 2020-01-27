@@ -62,23 +62,23 @@ CollisionFinder::CollisionFinder(Rectangle t_GF_outline, Rectangle t_SndF_outlin
 
 CollisionFinder::~CollisionFinder(){
 }
-
+//Important note about the model: side1 must align with inertial x-axis
 Vector3D<float> CollisionFinder::getNormalVector(building_sides hit_side)
 {
     Vector3D<float> t_res;
     switch (hit_side)
     {
         case building_sides::side1 :
-            t_res.x = 0; t_res.y = 1; t_res.z = 0;
-            break;
-        case building_sides::side2 :
             t_res.x = 0; t_res.y = -1; t_res.z = 0;
             break;
+        case building_sides::side2 :
+            t_res.x = -1; t_res.y = 0; t_res.z = 0;
+            break;
         case building_sides::side3 :
-            t_res.x = 1; t_res.y = 0; t_res.z = 0;
+            t_res.x = 0; t_res.y = 1; t_res.z = 0;
             break;
         case building_sides::side4 :
-            t_res.x = -1; t_res.y = 0; t_res.z = 0;  
+            t_res.x = 1; t_res.y = 0; t_res.z = 0;  
             break;   
         default:
             break;

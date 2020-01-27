@@ -2,7 +2,10 @@
 
 #include <vector>
 #include <iostream>
-#include "navigator_ch3.hpp"
+#include "Vector2D.hpp"
+#include "Vector3D.hpp"
+#include "Line2D.hpp"
+#include "Rectangle.hpp"
 #include "Waypoint.hpp"
 class print_utility{
 public:

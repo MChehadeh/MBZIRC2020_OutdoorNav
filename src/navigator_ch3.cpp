@@ -2,7 +2,8 @@
 #define show_internals
 using namespace std;
 
-//TODO: Refactor to eliminate many repitions in the code
+// TODO: Refactor to eliminate many repitions in the code
+// VERY IMPORTANT! assumed tower and arena are parallel
 navigator_ch3::navigator_ch3(){
 }
 
@@ -13,47 +14,12 @@ void navigator_ch3::receive_msg_data(DataMessage* t_msg)
         Vector3D<double> norm_vec;
         norm_vec = CollisionFinder::getNormalVector(tmp->side_of_hit);
         fire_id detected_fire_id = this->findFireID(tmp->filterPoint);
+        #ifdef show_internals
+        print_utility::print_vec_3d(norm_vec);
+        #endif
         this->addFireLocation(detected_fire_id, tmp->filterPoint,norm_vec);
     }
-    else if (t_msg->getType()==msg_type::INTEGER) //TODO: Refactor to reflect fire id path request
-    {
-        std::vector<Waypoint> pathToFire=this->generateFireApproachPath(latest_known_position,static_cast<fire_id>(((IntegerMsg*)t_msg)->data));
-        PosesMsg t_wpts;
-        for (int i=0;i<pathToFire.size();i++){
-            Pose t_wp_pose;
-            t_wp_pose.x=pathToFire[i].position.x;
-            t_wp_pose.y=pathToFire[i].position.y;
-            t_wp_pose.z=pathToFire[i].position.z;
-            t_wp_pose.yaw=pathToFire[i].yaw;
-            t_wpts.p.poses.push_back(t_wp_pose);
-        }
-        #ifdef show_internals
-        print_utility::print_waypoint(pathToFire);
-        #endif
-        emit_message(&t_wpts);
-    }
-    else if (t_msg->getType()==msg_type::EMPTY){ //TODO: Refactor to reflect scan path request
-
-        std::vector<Waypoint> scanning_path=this->generateWaypointsToCorridor(launch_point,scanning_corridors[0].altitude);
-        std::vector<Waypoint> t_scanning_path_on_corridor=this->generateWaypointsForScanning((scanning_path.end()-1)->position);
-        for (int i=0;i<t_scanning_path_on_corridor.size();i++){
-            scanning_path.push_back(t_scanning_path_on_corridor[i]);
-        }
-        PosesMsg t_wpts;
-        for (int i=0;i<scanning_path.size();i++){
-            Pose t_wp_pose;
-            t_wp_pose.x=scanning_path[i].position.x;
-            t_wp_pose.y=scanning_path[i].position.y;
-            t_wp_pose.z=scanning_path[i].position.z;
-            t_wp_pose.yaw=scanning_path[i].yaw;
-            t_wpts.p.poses.push_back(t_wp_pose);
-        }
-        #ifdef show_internals
-        print_utility::print_waypoint(scanning_path);
-        #endif
-        emit_message(&t_wpts);
-    }
-
+    
 }
 
 void navigator_ch3::receive_msg_data(DataMessage* t_msg,int channel){
@@ -75,41 +41,127 @@ void navigator_ch3::receive_msg_data(DataMessage* t_msg,int channel){
             nozzle_loc=nozzle_loc+latest_known_position;
             FloatMsg distance_to_wall_msg;
             distance_to_wall_msg.data=(float)this->getDistanceToBuilding(nozzle_loc);
+            last_known_heading= ((PoseMsg*)t_msg)->pose.yaw;
             emit_message(&distance_to_wall_msg);
         }
     }
     else if (channel==receiving_channels::UAV_Orientation){
         if(t_msg->getType() == msg_type::POSE)
         {
-            last_known_heading= ((PoseMsg*)t_msg)->pose.z;
+            
         }
     }
+    else if(channel==receiving_channels::Landing_Waypoints){
+        if (t_msg->getType()==msg_type::EMPTY){
+            std::vector<Waypoint> landing_path=this->generateWaypointsToLandingPoint(latest_known_position);
+            PosesMsg t_wpts;
+            for (int i=0;i<landing_path.size();i++){
+                Pose t_wp_pose;
+                t_wp_pose.x=landing_path[i].position.x;
+                t_wp_pose.y=landing_path[i].position.y;
+                t_wp_pose.z=landing_path[i].position.z;
+                t_wp_pose.yaw=landing_path[i].yaw;
+                t_wpts.p.poses.push_back(t_wp_pose);
+            }
+            #ifdef show_internals
+            print_utility::print_waypoint(landing_path);
+            #endif
+            emit_message(&t_wpts);
+        }
+    }
+    else if (channel==receiving_channels::Wall_Scanning_Waypoints){
+        if (t_msg->getType()==msg_type::EMPTY){ //TODO: Refactor to reflect scan path request
+            std::vector<Waypoint> scanning_path=this->generateWaypointsToCorridor(launch_point,scanning_corridors[0].altitude);
+            std::vector<Waypoint> t_scanning_path_on_corridor=this->generateWaypointsForScanning((scanning_path.end()-1)->position);
+            for (int i=0;i<t_scanning_path_on_corridor.size();i++){
+                scanning_path.push_back(t_scanning_path_on_corridor[i]);
+            }
+            PosesMsg t_wpts;
+            for (int i=0;i<scanning_path.size();i++){
+                Pose t_wp_pose;
+                t_wp_pose.x=scanning_path[i].position.x;
+                t_wp_pose.y=scanning_path[i].position.y;
+                t_wp_pose.z=scanning_path[i].position.z;
+                t_wp_pose.yaw=scanning_path[i].yaw;
+                t_wpts.p.poses.push_back(t_wp_pose);
+            }
+            #ifdef show_internals
+            print_utility::print_waypoint(scanning_path);
+            #endif
+            emit_message(&t_wpts);
+        }
+    }
+    else if (channel==receiving_channels::Fire_Waypoints){
+        if (t_msg->getType()==msg_type::INTEGER) //TODO: Refactor to reflect fire id path request
+        {
+            std::vector<Waypoint> pathToFire=this->generateFireApproachPath(latest_known_position,static_cast<fire_id>(((IntegerMsg*)t_msg)->data));
+            PosesMsg t_wpts;
+            for (int i=0;i<pathToFire.size();i++){
+                Pose t_wp_pose;
+                t_wp_pose.x=pathToFire[i].position.x;
+                t_wp_pose.y=pathToFire[i].position.y;
+                t_wp_pose.z=pathToFire[i].position.z;
+                t_wp_pose.yaw=pathToFire[i].yaw;
+                t_wpts.p.poses.push_back(t_wp_pose);
+            }
+            #ifdef show_internals
+            print_utility::print_waypoint(pathToFire);
+            #endif
+            emit_message(&t_wpts);
+        }
+    }
+    else if (channel==receiving_channels::Ground_Scanning_Waypoints){
+        if (t_msg->getType()==msg_type::EMPTY){
+            std::vector<Waypoint> pathForGroundScanning=this->generateWaypointsForBlanketFireScanning(latest_known_position);
+            PosesMsg t_wpts;
+            for (int i=0;i<pathForGroundScanning.size();i++){
+                Pose t_wp_pose;
+                t_wp_pose.x=pathForGroundScanning[i].position.x;
+                t_wp_pose.y=pathForGroundScanning[i].position.y;
+                t_wp_pose.z=pathForGroundScanning[i].position.z;
+                t_wp_pose.yaw=pathForGroundScanning[i].yaw;
+                t_wpts.p.poses.push_back(t_wp_pose);
+            }
+            #ifdef show_internals
+            print_utility::print_waypoint(pathForGroundScanning);
+            #endif
+            emit_message(&t_wpts);
+        }
+    }
+    
 
 }
 
-navigator_ch3::navigator_ch3(Rectangle t_GF, Rectangle t_SndF, double altitude_increment, double min_dist_to_floor,
-double max_altitude, double dist_to_wall, double t_GF_FF_height, double t_GF_height)
+navigator_ch3::navigator_ch3(Rectangle t_GF, Rectangle t_SndF, double t_altitude_increment, double t_min_dist_to_floor,
+double t_max_altitude, double t_dist_to_wall, double t_GF_FF_height, double t_GF_height)
 {
     //Initialize variables
     Vector3D<double> null_vec;
-    for (int i=0; i<=last_fire_id; i++){
+    for (int i=0; i<=(int)last_fire_id; i++){
         fire_loc_at_corridor.push_back(null_vec);
+        fire_loc_at_building.push_back(null_vec);
     }
+    GF_outline=t_GF;
+    SndF_outline=t_SndF;
     GF_height = t_GF_height;
     GF_FF_height = t_GF_FF_height;
+    dist_to_wall=t_dist_to_wall;
+    min_dist_to_floor=t_min_dist_to_floor;
+    altitude_increment=t_altitude_increment;
+    max_altitude=t_max_altitude;
     //Generate scanning waypoints
     Rectangle base_corridor_gf;
     base_corridor_gf = t_GF;
 
-    base_corridor_gf.scaleBy((dist_to_wall*2+t_GF.getSide1().getLength())/t_GF.getSide1().getLength(),rect_sides::side1);
-    base_corridor_gf.scaleBy((dist_to_wall*2+t_GF.getSide2().getLength())/t_GF.getSide2().getLength(),rect_sides::side2);
+    base_corridor_gf.scaleBy((t_dist_to_wall*2+t_GF.getSide1().getLength())/t_GF.getSide1().getLength(),rect_sides::side1);
+    base_corridor_gf.scaleBy((t_dist_to_wall*2+t_GF.getSide2().getLength())/t_GF.getSide2().getLength(),rect_sides::side2);
     Vector2D<double> offset_floor_outline;
     offset_floor_outline = t_GF.getCenter() - base_corridor_gf.getCenter();
     base_corridor_gf.translateBy(offset_floor_outline);
     Rectangle base_corridor_sndf;
     base_corridor_sndf = t_SndF;
-    base_corridor_sndf.scaleBy((dist_to_wall*2+t_SndF.getSide1().getLength())/t_SndF.getSide1().getLength(),rect_sides::side1);
-    base_corridor_sndf.scaleBy((dist_to_wall*2+t_SndF.getSide2().getLength())/t_SndF.getSide2().getLength(),rect_sides::side2);
+    base_corridor_sndf.scaleBy((t_dist_to_wall*2+t_SndF.getSide1().getLength())/t_SndF.getSide1().getLength(),rect_sides::side1);
+    base_corridor_sndf.scaleBy((t_dist_to_wall*2+t_SndF.getSide2().getLength())/t_SndF.getSide2().getLength(),rect_sides::side2);
     offset_floor_outline = t_SndF.getCenter() - base_corridor_sndf.getCenter();
     base_corridor_sndf.translateBy(offset_floor_outline);
 
@@ -160,8 +212,8 @@ std::vector<Waypoint> navigator_ch3::generateWaypointsForScanning(Vector3D<doubl
         std::vector<Vector2D<double>> res_path;
         res_path = scanning_corridors[i].generateClosedPathFromStartingPoint(start_point_2d);
         #ifdef show_internals
-        print_utility::print_vec_3d(start_point);
-        print_utility::print_vec_2d(res_path);
+        //print_utility::print_vec_3d(start_point);
+        //print_utility::print_vec_2d(res_path);
         #endif
         for (int j=0; j<res_path.size(); j++){
             Waypoint t_wp;
@@ -174,8 +226,8 @@ std::vector<Waypoint> navigator_ch3::generateWaypointsForScanning(Vector3D<doubl
     }
     #ifdef show_internals
 
-    print_utility::print_vec_rect(scanning_corridors);
-    print_utility::print_waypoint(t_generated_waypoints);
+    //print_utility::print_vec_rect(scanning_corridors);
+    //print_utility::print_waypoint(t_generated_waypoints);
     #endif
     return t_generated_waypoints;
 }
@@ -279,6 +331,10 @@ std::vector<Waypoint> navigator_ch3::generateWaypointsToLandingPoint(Vector3D<do
     Vector2D<double> offset_floor_outline;
     offset_floor_outline = used_floor_outline.getCenter() - used_corridor.getCenter();
     used_corridor.translateBy(offset_floor_outline);
+    #ifdef show_internals
+    print_utility::print_vec_rect(used_corridor);
+    print_utility::print_vec_line(line_from_start_to_land);
+    #endif
     if (used_corridor.checkLineIntersection(line_from_start_to_land)){
         Vector2D<double> start_point_on_corridor_2d=used_corridor.getClosestPoint(start_point_2d);
         Vector2D<double> end_point_on_corridor_2d=used_corridor.getClosestPoint(landing_point_2d);
@@ -322,10 +378,17 @@ void navigator_ch3::addFireLocation(fire_id detected_fire_id, Vector3D<double> f
 
     line_fire_normal.setPoint1(t_fire_location);
     line_fire_normal.setPoint2(t_fire_location + t_fire_normal);
-    t_fire_loc_at_corridor.z = fire_location.z;
+    #ifdef show_internals
+    print_utility::print_vec_line(line_fire_normal);
+    #endif
     line_fire_normal.scaleBy(dist_to_wall);
     t_fire_loc_at_corridor.x = line_fire_normal.getPoint2().x;
     t_fire_loc_at_corridor.y = line_fire_normal.getPoint2().y;
+    t_fire_loc_at_corridor.z = fire_location.z;
+    #ifdef show_internals
+    print_utility::print_vec_3d(t_fire_loc_at_corridor);
+    print_utility::print_vec_line(line_fire_normal);
+    #endif
     fire_loc_at_corridor[(int)detected_fire_id] = t_fire_loc_at_corridor;
     fire_loc_at_building[(int)detected_fire_id]=fire_location;
     if (external_wall_fire_counter == 3)
@@ -377,7 +440,7 @@ void navigator_ch3::updateBlanketFireParameters(Rectangle area_outline_para,doub
     offset_scanning_outline = area_outline.getCenter() - scanning_path_outline.getCenter();
     scanning_path_outline.translateBy(offset_scanning_outline);
 
-    // VERY IMPORTANT! assumed tower and arena are parallel
+    
 
 }
 
@@ -440,7 +503,9 @@ std::vector<Waypoint> navigator_ch3::generateWaypointsForBlanketFireScanning(Vec
     side_shift_operator=side_shift_operator*blanket_fire_side_step_size;
     Line2D scan_vertical_line=scanning_path_outline.getSide2();
     bool vertical_line_sample_point1_first=true;
-    while (Vector2D<double>::getL2Norm(scan_vertical_line.getPoint1(),scanning_path_outline.getSide2().getPoint1())<scanning_path_outline.getSide1().getLength()){
+    scan_vertical_line.translateBy(side_shift_operator*-1.);
+    do {
+        scan_vertical_line.translateBy(side_shift_operator);
         Vector3D<double> p1=scan_vertical_line.getPoint1().convertTo3D(blanket_fire_scanning_altitude);
         Vector3D<double> p2=scan_vertical_line.getPoint2().convertTo3D(blanket_fire_scanning_altitude);
         Waypoint t_wp_1,t_wp_2;
@@ -454,9 +519,10 @@ std::vector<Waypoint> navigator_ch3::generateWaypointsForBlanketFireScanning(Vec
             t_wp_1.position=p2;
             t_wp_2.position=p1;
         }
+        vertical_line_sample_point1_first=!vertical_line_sample_point1_first;
         generated_waypoints.push_back(t_wp_1);
         generated_waypoints.push_back(t_wp_2);
-        scan_vertical_line.translateBy(side_shift_operator);
-    }
+    } 
+    while (Vector2D<double>::getL2Norm(scan_vertical_line.getPoint1(),scanning_path_outline.getSide1().getPoint2())>Vector2D<double>::getL2Norm(side_shift_operator));
     return generated_waypoints;
 }

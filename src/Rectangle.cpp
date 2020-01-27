@@ -1,5 +1,5 @@
 #include "Rectangle.hpp"
-
+#include "print_utility.hpp"
 Rectangle::Rectangle(){
 
 }
@@ -205,6 +205,11 @@ std::vector<Vector2D<double>> Rectangle::generatePathSegmentFromTwoPoint(Vector2
 }
 
 bool Rectangle::checkLineIntersection(Line2D t_line){
+    std::cout << Line2D::check_lines_intersection(t_line,this->getSide1()) << "a \n";
+    std::cout << Line2D::check_lines_intersection(t_line,this->getSide2()) << "b \n";
+    std::cout << Line2D::check_lines_intersection(t_line,this->getSide3()) << "c \n";
+    std::cout << Line2D::check_lines_intersection(t_line,this->getSide4()) << "d \n";
+
     return (Line2D::check_lines_intersection(t_line,this->getSide1()) || Line2D::check_lines_intersection(t_line,this->getSide2()) ||
     Line2D::check_lines_intersection(t_line,this->getSide3()) || Line2D::check_lines_intersection(t_line,this->getSide4()));
 }

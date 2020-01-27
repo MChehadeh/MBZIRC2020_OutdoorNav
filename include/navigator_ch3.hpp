@@ -15,8 +15,9 @@
 #include "MissionStateManager.hpp"
 #include "RotationMatrix3by3.hpp"
 
-//The following simplest scenario is considered.
+// The following simplest scenario is considered.
 // One drone scans the whole building exterior. Identifies the location of all fire sources. Then extinguishing starts.
+// Important note about the model: side1 must align with inertial x-axis
 enum fire_id {wall_fire_gf, wall_fire_ff, wall_fire_sf, last_fire_id = wall_fire_sf};
 
 class navigator_ch3 : public msg_receiver, public msg_emitter{
@@ -43,7 +44,7 @@ private:
     double getHeadingToPoint(Vector2D<double> base_point,Vector2D<double> target_point);
     double getHeadingToPoint(Vector3D<double> base_point,Vector3D<double> target_point);
 public:
-    enum receiving_channels {UAV_Position,UAV_Orientation};
+    enum receiving_channels {UAV_Position,UAV_Orientation,Landing_Waypoints,Wall_Scanning_Waypoints,Fire_Waypoints,Ground_Scanning_Waypoints};
     navigator_ch3(Rectangle t_GF_outline, Rectangle t_SndF_outline, double altitude_increment, double min_dist_to_floor,
     double max_altitude, double dist_to_wall, double GF_FF_height, double GF_height); 
     void updateBlanketFireParameters(Rectangle area_outline, double blanket_fire_scanning_altitude,double blanket_fire_dist_to_perimeter,double blanket_fire_side_step_size);

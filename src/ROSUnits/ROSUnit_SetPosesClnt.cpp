@@ -17,7 +17,7 @@ void ROSUnit_SetPosesClnt::receive_msg_data(DataMessage* t_msg)
     {
         common_srv::set_poses t_srv;
         PosesMsg* t_poses = (PosesMsg*) t_msg;
-        for(int i = 0; i <= t_poses->p.poses.size(); i++)
+        for(int i = 0; i < t_poses->p.poses.size(); i++)
         {
             common_srv::Pose t_pose;
             t_pose.point.x = t_poses->p.poses.at(i).x;
