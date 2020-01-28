@@ -57,7 +57,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   include
   ${ReactPhysics3D_INCLUDE_DIRS}
-  ~/reactphysics3d/reactphysics3d-0.7.1/src
+  ~/src/reactphysics3d-0.7.1/src
 )
 
 

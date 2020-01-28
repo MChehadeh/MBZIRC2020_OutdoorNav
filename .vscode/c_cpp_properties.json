@@ -1,0 +1,29 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/pedrohrpbs/catkin_ws_NAVIO/devel/include/**",
+                "/opt/ros/kinetic/include/**",
+                "/home/pedrohrpbs/catkin_ws_NAVIO/src/common_srv/include/**",
+                "/home/pedrohrpbs/catkin_ws_NAVIO/src/external_wall_fire/include/**",
+                "/home/pedrohrpbs/catkin_ws_NAVIO/src/flight_scenario/include/**",
+                "/home/pedrohrpbs/catkin_ws/src/gpsdata_collection/include/**",
+                "/home/pedrohrpbs/catkin_ws/src/kuri_mbzirc_offboard_control/include/**",
+                "/home/pedrohrpbs/catkin_ws_NAVIO/src/mocap_optitrack/include/**",
+                "/home/pedrohrpbs/catkin_ws_NAVIO/src/MBZIRC2020_OutdoorNav/include/**",
+                "/home/pedrohrpbs/catkin_ws_NAVIO/src/positioning_system/include/**",
+                "/usr/include/**"
+            ],
+            "name": "ROS",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

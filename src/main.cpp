@@ -18,13 +18,13 @@
 #include "ROSUnit_Xsens.hpp"
 #include "ROSUnits/ROSUnit_Factory.hpp"
 //Environment Model Parameters
-const double altitude_increment=2.; //Altitude gained after every run around the building
-const double min_dist_to_floor=1.8;//This is the switch altitude+GF_FF_height for smaller run around SndF
-const double max_altitude=15;
-const double dist_to_wall=1.5;//Gap to wall for the corridor
-const double GF_FF_height=9;//Height for GF+FF
-const double GF_height=4.5;
-const double SndF_height=3;
+const double altitude_increment=1; //Altitude gained after every run around the building
+const double min_dist_to_floor=0.25;//This is the switch altitude+GF_FF_height for smaller run around SndF
+const double max_altitude=2.3;
+const double dist_to_wall=0.5;//Gap to wall for the corridor
+const double GF_FF_height=1.5;//Height for GF+FF
+const double GF_height=0.75;
+const double SndF_height=0.75;
 //Blanket Parameters
 const double blanket_fire_scanning_altitude=15;
 const double blanket_fire_dist_to_perimeter=2;
@@ -46,28 +46,28 @@ int main(int argc, char **argv)
   //Challenge 3 Navigator
   //Important note about the model: side1 must align with inertial x-axis
   Vector2D<double> side1_GF_p1,side1_GF_p2,side2_GF_p2;
-  side1_GF_p1.x=0;
-  side1_GF_p1.y=0;
-  side1_GF_p2.x=5;
-  side1_GF_p2.y=0;
-  side2_GF_p2.x=0;
-  side2_GF_p2.y=10;
+  side1_GF_p1.x=1;
+  side1_GF_p1.y=1;
+  side1_GF_p2.x=3;
+  side1_GF_p2.y=1;
+  side2_GF_p2.x=1;
+  side2_GF_p2.y=3;
 
   Vector2D<double> side1_SndF_p1,side1_SndF_p2,side2_SndF_p2;
-  side1_SndF_p1.x=0;
-  side1_SndF_p1.y=0;
-  side1_SndF_p2.x=5;
-  side1_SndF_p2.y=0;
-  side2_SndF_p2.x=0;
-  side2_SndF_p2.y=5;
+  side1_SndF_p1.x=1;
+  side1_SndF_p1.y=1;
+  side1_SndF_p2.x=3;
+  side1_SndF_p2.y=1;
+  side2_SndF_p2.x=1;
+  side2_SndF_p2.y=2;
 
   Vector2D<double> side1_AreaOutline_p1,side1_AreaOutline_p2,side2_AreaOutline_p2;
-  side1_AreaOutline_p1.x=-10;
-  side1_AreaOutline_p1.y=-10;
-  side1_AreaOutline_p2.x=15;
-  side1_AreaOutline_p2.y=-10;
-  side2_AreaOutline_p2.x=-10;
-  side2_AreaOutline_p2.y=15;
+  side1_AreaOutline_p1.x=0;
+  side1_AreaOutline_p1.y=0;
+  side1_AreaOutline_p2.x=4;
+  side1_AreaOutline_p2.y=0;
+  side2_AreaOutline_p2.x=0;
+  side2_AreaOutline_p2.y=4;
 
   Line2D side1_GF,side2_GF,side1_SndF,side2_SndF,side1_AreaOutline,side2_AreaOutline;
   side1_GF.setPoint1(side1_GF_p1);
@@ -93,8 +93,8 @@ int main(int argc, char **argv)
   //Navigation Space Model
   navigator_ch3 navigator_ch3_main{GF,SndF,altitude_increment,min_dist_to_floor,max_altitude,dist_to_wall,GF_FF_height,GF_height};
   Vector3D<double> launch_point,landing_point;
-  launch_point.x=-10;
-  launch_point.y=1;
+  launch_point.x=0;
+  launch_point.y=0;
   launch_point.z=0;
   landing_point=launch_point;
   navigator_ch3_main.updateLaunchPoint(launch_point);
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
 
 
 
-  #ifdef debug_mode
+  #ifdef fire_debug
   //Add fire locations for testing.
   filterPointMsg fire_1,fire_2,fire_3;
   Vector3D<float> fire_1_loc,fire_2_loc,fire_3_loc;
