@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-#undef fire_debug
+#define fire_debug
 
 const struct tPacketProp{
 	uint8_t pad_len = 3;

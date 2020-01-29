@@ -7,6 +7,7 @@ CollisionFilter::~CollisionFilter() {
 
 void CollisionFilter::receive_msg_data(DataMessage* t_msg)
 {
+    std::cout<< "CollisionFilter::receive_msg_data" << std::endl;
     if (t_msg->getType() == msg_type::FILTER_POINT) {
         filterPointMsg* tmp = ((filterPointMsg*) t_msg);
         if (tmp->side_of_hit==side_filter){
@@ -17,6 +18,7 @@ void CollisionFilter::receive_msg_data(DataMessage* t_msg)
 
 void CollisionFilter::FilteringHitPoint(Vector3D<float> t_hitPoint)
 {
+    std::cout << "Hit Point: " << t_hitPoint.x << ", " << t_hitPoint.y << ", " << t_hitPoint.z << std::endl;
     if(x_hitpoint.size() < median_filter_window_size) 
     {
         x_hitpoint.push_back(t_hitPoint.x);
@@ -36,6 +38,7 @@ void CollisionFilter::FilteringHitPoint(Vector3D<float> t_hitPoint)
         median.y = y_hitpoint.at(median_index);
         median.z = z_hitpoint.at(median_index);
         getAvg(median);
+        std::cout << "Median Point: " << median.x << ", " << median.y << ", " << median.z << std::endl;
         x_hitpoint.clear();
         y_hitpoint.clear();
         z_hitpoint.clear();
@@ -52,6 +55,8 @@ void CollisionFilter::getAvg(Vector3D<float> t_avg)
         filterPointMsg filteredFirePoint;
         filteredFirePoint.setFilterMessage(avg);
         filteredFirePoint.side_of_hit = this->side_filter;
+        std::cout << "Average Point: " << avg.x << ", " << avg.y << ", " << avg.z << std::endl;
+        std::cout << "Side of Hit: " << (int)filteredFirePoint.side_of_hit << std::endl;
         this->emit_message((DataMessage*) &filteredFirePoint);
     }
     if (counter == 0){

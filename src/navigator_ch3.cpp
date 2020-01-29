@@ -17,6 +17,9 @@ void navigator_ch3::receive_msg_data(DataMessage* t_msg)
         #ifdef show_internals
         print_utility::print_vec_3d(norm_vec);
         #endif
+        std::cout << "Fire ID: " << detected_fire_id << std::endl;
+        std::cout << "Filter Point: " << tmp->filterPoint.x << ", " << tmp->filterPoint.y << ", " << tmp->filterPoint.z << std::endl;
+        std::cout << "Norm Vec: " << norm_vec.x << ", " << norm_vec.y << ", " << norm_vec.z << std::endl;
         this->addFireLocation(detected_fire_id, tmp->filterPoint,norm_vec);
     }
     

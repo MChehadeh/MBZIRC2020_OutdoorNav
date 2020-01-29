@@ -103,19 +103,22 @@ int main(int argc, char **argv)
 
   //Collision Space Model
   CollisionFinder fireLocationFinder{GF, SndF, GF_FF_height, SndF_height};
-  CollisionFilter fireLocationFilter;
-
+  CollisionFilter fireLocationFilter_side1,fireLocationFilter_side2,fireLocationFilter_side3,fireLocationFilter_side4;
+  fireLocationFilter_side1.side_filter=building_sides::side1;
+  fireLocationFilter_side2.side_filter=building_sides::side2;
+  fireLocationFilter_side3.side_filter=building_sides::side3;
+  fireLocationFilter_side4.side_filter=building_sides::side4;
 
 
   #ifdef fire_debug
   //Add fire locations for testing.
   filterPointMsg fire_1,fire_2,fire_3;
   Vector3D<float> fire_1_loc,fire_2_loc,fire_3_loc;
-  fire_1_loc.x=0;
-  fire_1_loc.y=3;
-  fire_1_loc.z=3;
+  fire_1_loc.x=2;
+  fire_1_loc.y=1;
+  fire_1_loc.z=2;
   fire_1.filterPoint=fire_1_loc;
-  fire_1.side_of_hit=building_sides::side2;
+  fire_1.side_of_hit=building_sides::side1;
   fire_2_loc.x=3;
   fire_2_loc.y=0;
   fire_2_loc.z=6;
@@ -128,15 +131,15 @@ int main(int argc, char **argv)
   fire_3.side_of_hit=building_sides::side4;
 
   navigator_ch3_main.receive_msg_data((DataMessage*)&fire_1);
-  navigator_ch3_main.receive_msg_data((DataMessage*)&fire_2);
-  navigator_ch3_main.receive_msg_data((DataMessage*)&fire_3);
+  //navigator_ch3_main.receive_msg_data((DataMessage*)&fire_2);
+  //navigator_ch3_main.receive_msg_data((DataMessage*)&fire_3);
 
   PoseMsg initial_position;
   initial_position.pose.x=7;
   initial_position.pose.y=5;
   initial_position.pose.z=5;
   initial_position.pose.yaw=0;
-  navigator_ch3_main.receive_msg_data(&initial_position,navigator_ch3::UAV_Position);
+  //navigator_ch3_main.receive_msg_data(&initial_position,navigator_ch3::UAV_Position);
   #endif
   //*********************************************************************************
   //*************************** Communication Setup *********************************
@@ -150,9 +153,16 @@ int main(int argc, char **argv)
   ROSUnit* ROSUnit_estimatedFireDirection = ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Server,ROSUnit_msg_type::ROSUnit_Vector,"outdoor_navigation/set_fire_direction");
   ROSUnit_uav_position->add_callback_msg_receiver(&navigator_ch3_main);
   ROSUnit_uav_orientation->add_callback_msg_receiver(&navigator_ch3_main);
-  ROSUnit_estimatedFireDirection->add_callback_msg_receiver(&fireLocationFinder);//OK
-  fireLocationFinder.add_callback_msg_receiver(&fireLocationFilter);//OK
-  fireLocationFilter.add_callback_msg_receiver(&navigator_ch3_main);//OK
+  ROSUnit_estimatedFireDirection->add_callback_msg_receiver(&fireLocationFinder);
+  fireLocationFinder.add_callback_msg_receiver(&fireLocationFilter_side1);
+  fireLocationFinder.add_callback_msg_receiver(&fireLocationFilter_side2);
+  fireLocationFinder.add_callback_msg_receiver(&fireLocationFilter_side3);
+  fireLocationFinder.add_callback_msg_receiver(&fireLocationFilter_side4);
+  fireLocationFilter_side1.add_callback_msg_receiver(&navigator_ch3_main);
+  fireLocationFilter_side2.add_callback_msg_receiver(&navigator_ch3_main);
+  fireLocationFilter_side3.add_callback_msg_receiver(&navigator_ch3_main);
+  fireLocationFilter_side4.add_callback_msg_receiver(&navigator_ch3_main);
+
   ROSUnit* ROSUnit_update_outdoor_nav_state_instance=ROSUnit_Factory_main.CreateROSUnit(ROSUnit_tx_rx_type::Client,ROSUnit_msg_type::ROSUnit_Int,"ex_bldg_fire_mm/update_outdoor_nav_state");
   MainMissionStateManager.add_callback_msg_receiver(ROSUnit_update_outdoor_nav_state_instance);//OK
 

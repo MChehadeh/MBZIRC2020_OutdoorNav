@@ -109,17 +109,21 @@ void CollisionFinder::receive_msg_data(DataMessage* t_msg)
 {
     if (t_msg->getType() == msg_type::VECTOR)
     {
+        std::cout << "inside receive data CollisionFinder" << std::endl;
         VectorMsg* t_fireline = ((VectorMsg*) t_msg);
         Vector3D<float> t_p1, t_p2;
         t_p1 = t_fireline->p1;
         t_p2 = t_fireline->p2;
+        std::cout << "inside receive data CollisionFinder 1" << std::endl;
         FindCollisionData(t_p1, t_p2);
+        std::cout << "inside receive data CollisionFinder 2" << std::endl;
     }
 }
 
 void CollisionFinder::FindCollisionData(Vector3D<float> t_p1, Vector3D<float> t_p2)
 {
     // Create the ray
+    std::cout << "inside receive data CollisionFinder 1.1" << std::endl;
     rp3d::Vector3 startPoint(t_p1.x , t_p1.y, t_p1.z);
     rp3d::Vector3 endPoint(1000*t_p2.x , 1000*t_p2.y, 1000*t_p2.z);
     rp3d::Ray my_ray(startPoint, endPoint);
@@ -129,7 +133,7 @@ void CollisionFinder::FindCollisionData(Vector3D<float> t_p1, Vector3D<float> t_
 
     // Create the raycast info object for the raycast result
     rp3d::RaycastInfo raycastInfo;
- 
+    std::cout << "inside receive data CollisionFinder 1.2" << std::endl;
     // Raycast test, if (Hit Angle < 30), accept the collision
     if (building_GF_FstF->raycast(my_ray, raycastInfo)) 
     {   
@@ -138,6 +142,7 @@ void CollisionFinder::FindCollisionData(Vector3D<float> t_p1, Vector3D<float> t_
         // std::cout << raycastInfo.body->getTransform().getPosition().x << std::endl;
         // std::cout << raycastInfo.body->getTransform().getPosition().y << std::endl;
         // std::cout << raycastInfo.body->getTransform().getPosition().z << std::endl;
+        std::cout << "inside receive data CollisionFinder 1.2.1" << std::endl;
         Vector3D<float> NorVec;
         building_sides hit_side;
         NorVec.x = raycastInfo.worldNormal.x;
@@ -157,9 +162,10 @@ void CollisionFinder::FindCollisionData(Vector3D<float> t_p1, Vector3D<float> t_
         // Calculate the angle
         float AngleOfHit = (180/M_PI)*acos(DotProduct/(Mag_NewPoint1*Mag_NewPoint2));
         std::cout<<"Angle of Fire: "<< AngleOfHit <<std::endl;
-        
+        std::cout << "inside receive data CollisionFinder 1.2.2" << std::endl;
         if (AngleOfHit < 30)
         {
+            std::cout << "inside receive data CollisionFinder 1.2.2.1" << std::endl;
             // Announce the confirmed hit
             std::cout<<"Fire Detected on Building 1: "
                                 <<raycastInfo.worldPoint.x <<" "
@@ -176,6 +182,7 @@ void CollisionFinder::FindCollisionData(Vector3D<float> t_p1, Vector3D<float> t_
             filterPointMsg HitPointTofilter;
             HitPointTofilter.setFilterMessage(building1HitPoint);
             HitPointTofilter.side_of_hit = hit_side;
+            std::cout << "inside receive data CollisionFinder 1.2.2.2" << std::endl;
             this->emit_message((DataMessage*) &HitPointTofilter);
         }
         else {
@@ -184,6 +191,7 @@ void CollisionFinder::FindCollisionData(Vector3D<float> t_p1, Vector3D<float> t_
     }
     else if (building_SndF->raycast(my_ray, raycastInfo)) 
     {
+        std::cout << "inside receive data CollisionFinder 1.2.3" << std::endl;
         Vector3D<float> NorVec;
         building_sides hit_side;
         NorVec.x = raycastInfo.worldNormal.x;
@@ -203,7 +211,7 @@ void CollisionFinder::FindCollisionData(Vector3D<float> t_p1, Vector3D<float> t_
         // Calculate the angle
         float AngleOfHit = (180/M_PI)*acos(DotProduct/(Mag_NewPoint1*Mag_NewPoint2));
         std::cout<<"Angle of Hit: "<<AngleOfHit<<std::endl;
-        
+        std::cout << "inside receive data CollisionFinder 1.2.3.1" << std::endl;
         if (AngleOfHit < 30)
         {
             // Announce the confirmed hit
@@ -231,4 +239,5 @@ void CollisionFinder::FindCollisionData(Vector3D<float> t_p1, Vector3D<float> t_
     else {
         std::cout<< "Fire NOT Detected!" <<std::endl;
     }
+    std::cout << "inside receive data CollisionFinder 1.2.4" << std::endl;
 }

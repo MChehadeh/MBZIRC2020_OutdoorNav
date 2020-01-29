@@ -22,8 +22,8 @@ private:
     const int median_filter_window_size = 5;
     const int median_index = std::floor(median_filter_window_size/2.);
     const int confidence_num_of_averaged_samples = 10;
-    building_sides side_filter;
 public:
+    building_sides side_filter;
     CollisionFilter();
     ~CollisionFilter();
 };
