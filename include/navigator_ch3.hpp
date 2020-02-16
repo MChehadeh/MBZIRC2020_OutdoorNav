@@ -14,7 +14,7 @@
 #include "FloatMsg.hpp"
 #include "MissionStateManager.hpp"
 #include "RotationMatrix3by3.hpp"
-
+#include "Vector3DMessage.hpp"
 // The following simplest scenario is considered.
 // One drone scans the whole building exterior. Identifies the location of all fire sources. Then extinguishing starts.
 // Important note about the model: side1 must align with inertial x-axis
@@ -24,6 +24,7 @@ class navigator_ch3 : public msg_receiver, public msg_emitter{
 private:
     const double nozzle_offset_to_center=0.8; //Assume tip is pointing to x+ direction
     const double blanket_scanning_yaw=0;
+    const double wall_fire_sources_num=1;
     double dist_to_wall, max_altitude, min_dist_to_floor, altitude_increment, GF_height, GF_FF_height;
     double blanket_fire_scanning_altitude,blanket_fire_dist_to_perimeter, blanket_fire_side_step_size;
     double last_known_heading;
@@ -40,11 +41,11 @@ private:
     std::vector<Vector3D<double>> fire_loc_at_building;
     navigator_ch3();
     fire_id findFireID(Vector3D<double> fire_location);
-    void addFireLocation(fire_id detected_fire_id, Vector3D<double> fire_location,Vector3D<double> fire_normal); //fire_normal: point1 at fire_location. Unit length is assumed
+    void addFireLocation(Vector3D<double> fire_location,Vector3D<double> fire_normal); //fire_normal: point1 at fire_location. Unit length is assumed
     double getHeadingToPoint(Vector2D<double> base_point,Vector2D<double> target_point);
     double getHeadingToPoint(Vector3D<double> base_point,Vector3D<double> target_point);
 public:
-    enum receiving_channels {UAV_Position,UAV_Orientation,Landing_Waypoints,Wall_Scanning_Waypoints,Fire_Waypoints,Ground_Scanning_Waypoints};
+    enum receiving_channels {BroadcastCh,UAV_Position,UAV_Orientation,Landing_Waypoints,Wall_Scanning_Waypoints,Fire_Waypoints,Ground_Scanning_Waypoints};
     navigator_ch3(Rectangle t_GF_outline, Rectangle t_SndF_outline, double altitude_increment, double min_dist_to_floor,
     double max_altitude, double dist_to_wall, double GF_FF_height, double GF_height); 
     void updateBlanketFireParameters(Rectangle area_outline, double blanket_fire_scanning_altitude,double blanket_fire_dist_to_perimeter,double blanket_fire_side_step_size);

@@ -48,15 +48,15 @@ int main(int argc, char **argv)
   Vector2D<double> side1_GF_p1,side1_GF_p2,side2_GF_p2;
   side1_GF_p1.x=1;
   side1_GF_p1.y=1;
-  side1_GF_p2.x=3;
+  side1_GF_p2.x=2;
   side1_GF_p2.y=1;
   side2_GF_p2.x=1;
-  side2_GF_p2.y=3;
+  side2_GF_p2.y=2;
 
   Vector2D<double> side1_SndF_p1,side1_SndF_p2,side2_SndF_p2;
   side1_SndF_p1.x=1;
   side1_SndF_p1.y=1;
-  side1_SndF_p2.x=3;
+  side1_SndF_p2.x=2;
   side1_SndF_p2.y=1;
   side2_SndF_p2.x=1;
   side2_SndF_p2.y=2;
@@ -109,7 +109,7 @@ int main(int argc, char **argv)
   fireLocationFilter_side3.side_filter=building_sides::side3;
   fireLocationFilter_side4.side_filter=building_sides::side4;
 
-
+  
   #ifdef fire_debug
   //Add fire locations for testing.
   filterPointMsg fire_1,fire_2,fire_3;

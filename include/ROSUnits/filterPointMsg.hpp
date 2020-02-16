@@ -2,7 +2,7 @@
 #include "DataMessage.hpp"
 #include "Vector3D.hpp"
 
-enum class building_sides {side1,side2,side3,side4};
+enum class building_sides {side1,side2,side3,side4,side5,side6};
 
 class filterPointMsg : public DataMessage {
 
