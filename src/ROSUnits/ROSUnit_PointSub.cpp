@@ -32,6 +32,7 @@ void ROSUnit_PointSub::callback1(const geometry_msgs::Point::ConstPtr& t_rec)
     t_vec.y = t_rec->y;
     t_vec.z = t_rec->z;
     t_msg.setVector3DMessage(t_vec);
+
     m_ptr[0]->emit_message((DataMessage*) &t_msg);
 }
 

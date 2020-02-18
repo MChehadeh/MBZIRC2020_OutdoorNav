@@ -1,5 +1,6 @@
 #include "navigator_ch3.hpp"
-#define show_internals
+#include <stdexcept>
+#undef show_internals
 using namespace std;
 
 // TODO: Refactor to eliminate many repitions in the code
@@ -13,22 +14,24 @@ void navigator_ch3::receive_msg_data(DataMessage* t_msg)
         filterPointMsg* tmp = ((filterPointMsg*) t_msg);
         Vector3D<double> norm_vec;
         norm_vec = CollisionFinder::getNormalVector(tmp->side_of_hit);
-        fire_id detected_fire_id = this->findFireID(tmp->filterPoint);
         #ifdef show_internals
         print_utility::print_vec_3d(norm_vec);
         #endif
-        this->addFireLocation(detected_fire_id, tmp->filterPoint,norm_vec);
+        std::cout << "external_wall_fire_counter: " << external_wall_fire_counter << std::endl;
+        std::cout << "Filter Point: " << tmp->filterPoint.x << ", " << tmp->filterPoint.y << ", " << tmp->filterPoint.z << std::endl;
+        std::cout << "Norm Vec: " << norm_vec.x << ", " << norm_vec.y << ", " << norm_vec.z << std::endl;
+        this->addFireLocation(tmp->filterPoint,norm_vec);
     }
     
 }
 
 void navigator_ch3::receive_msg_data(DataMessage* t_msg,int channel){
     if (channel==receiving_channels::UAV_Position){
-        if(t_msg->getType() == msg_type::POSE)
+        if(t_msg->getType() == msg_type::VECTOR3D)
         {
-            latest_known_position.x = ((PoseMsg*)t_msg)->pose.x;
-            latest_known_position.y = ((PoseMsg*)t_msg)->pose.y;
-            latest_known_position.z = ((PoseMsg*)t_msg)->pose.z;
+            latest_known_position.x = ((Vector3DMessage*)t_msg)->getData().x;
+            latest_known_position.y = ((Vector3DMessage*)t_msg)->getData().y;
+            latest_known_position.z = ((Vector3DMessage*)t_msg)->getData().z;
             //Find tip distance to wall
             Vector3D<double> nozzle_base_vector,nozzle_loc;
             nozzle_base_vector.x=nozzle_offset_to_center;
@@ -41,14 +44,17 @@ void navigator_ch3::receive_msg_data(DataMessage* t_msg,int channel){
             nozzle_loc=nozzle_loc+latest_known_position;
             FloatMsg distance_to_wall_msg;
             distance_to_wall_msg.data=(float)this->getDistanceToBuilding(nozzle_loc);
-            last_known_heading= ((PoseMsg*)t_msg)->pose.yaw;
+            #ifdef show_internals
+            print_utility::print_vec_3d(latest_known_position);
+            #endif
             emit_message(&distance_to_wall_msg);
         }
     }
     else if (channel==receiving_channels::UAV_Orientation){
-        if(t_msg->getType() == msg_type::POSE)
+        if(t_msg->getType() == msg_type::VECTOR3D)
         {
-            
+            last_known_heading= ((Vector3DMessage*)t_msg)->getData().z;
+
         }
     }
     else if(channel==receiving_channels::Landing_Waypoints){
@@ -364,7 +370,7 @@ std::vector<Waypoint> navigator_ch3::generateWaypointsToLandingPoint(Vector3D<do
     return generated_waypoints;
 }
 
-void navigator_ch3::addFireLocation(fire_id detected_fire_id, Vector3D<double> fire_location, Vector3D<double> fire_normal)
+void navigator_ch3::addFireLocation(Vector3D<double> fire_location, Vector3D<double> fire_normal)
 {
     Vector3D<double> t_fire_loc_at_corridor;
     Vector2D<double> t_fire_location;
@@ -374,7 +380,6 @@ void navigator_ch3::addFireLocation(fire_id detected_fire_id, Vector3D<double> f
     t_fire_normal.x = fire_normal.x;
     t_fire_normal.y = fire_normal.y;
     Line2D line_fire_normal;
-    external_wall_fire_counter++;
 
     line_fire_normal.setPoint1(t_fire_location);
     line_fire_normal.setPoint2(t_fire_location + t_fire_normal);
@@ -389,9 +394,11 @@ void navigator_ch3::addFireLocation(fire_id detected_fire_id, Vector3D<double> f
     print_utility::print_vec_3d(t_fire_loc_at_corridor);
     print_utility::print_vec_line(line_fire_normal);
     #endif
-    fire_loc_at_corridor[(int)detected_fire_id] = t_fire_loc_at_corridor;
-    fire_loc_at_building[(int)detected_fire_id]=fire_location;
-    if (external_wall_fire_counter == 3)
+    fire_loc_at_corridor[(int)external_wall_fire_counter] = t_fire_loc_at_corridor;
+    fire_loc_at_building[(int)external_wall_fire_counter]=fire_location;
+    external_wall_fire_counter++;
+
+    if (external_wall_fire_counter == wall_fire_sources_num)
     {
         if (MainMissionStateManager.getMissionState() == outdoor_navigation_states::AllGroundFiresDetected) {
             MainMissionStateManager.updateMissionState(outdoor_navigation_states::AllOutdoorFiresDetected);
@@ -399,6 +406,9 @@ void navigator_ch3::addFireLocation(fire_id detected_fire_id, Vector3D<double> f
         else {
             MainMissionStateManager.updateMissionState(outdoor_navigation_states::AllWallFiresDetected);
         }
+    }else if (external_wall_fire_counter>wall_fire_sources_num)
+    {
+        throw std::out_of_range("external_wall_fire_counter>wall_fire_sources_num");
     }
 }
 

@@ -19,7 +19,11 @@ private:
     void FindCollisionData(Vector3D<float>, Vector3D<float>);
     rp3d::ProxyShape* building_GF_FstF;
     rp3d::ProxyShape* building_SndF;
-
+    rp3d::CollisionBody* Building_GF_FstF_Body;
+    rp3d::CollisionBody* Building_SndF_Body;
+    rp3d::CollisionWorld world;
+    rp3d::BoxShape* Cube_GF_FstF;
+    rp3d::BoxShape* Cube_SndF;
 public:
     // Important note about the model: side1 must align with inertial x-axis
     static Vector3D<float> getNormalVector(Vector3D<float> world_normal, building_sides& hit_side);
